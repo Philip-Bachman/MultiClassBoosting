@@ -1,5 +1,5 @@
 % test multiclass MNIST digit classification using a GTRICA base learner
-%
+% CHANGE
 % Good settings:
 %   ????
 %
