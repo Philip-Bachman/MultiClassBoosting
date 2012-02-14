@@ -127,9 +127,9 @@ classdef GtricaLearner < Learner
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.MaxIter = 50;
-            options.MaxFunEvals = 100;
-            options.TolX = 1e-8;            
+            options.MaxIter = 40;
+            options.MaxFunEvals = 80;
+            options.TolX = 1e-6;            
             % compute scalar/vector-valued feature activations
             [ Fs Fv ] = self.evaluate(X); 
             % set loss/gradient function for updating self.b
@@ -142,7 +142,7 @@ classdef GtricaLearner < Learner
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.TolX = 1e-8;
+            options.TolX = 1e-6;
             options.MaxIter = self.ab_iters;
             options.MaxFunEvals = self.ab_iters*2;
             % set loss/gradient function for joint update of self.A and self.b

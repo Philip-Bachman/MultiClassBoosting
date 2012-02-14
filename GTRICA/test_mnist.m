@@ -13,20 +13,20 @@ reset(stream,round(1000*c(6)));
 
 mc_opts = struct();
 mc_opts.loss_func = @loss_hinge;
-mc_opts.l_count = 5;
+mc_opts.l_count = 30;
 mc_opts.l_const = @GtricaLearner;
 mc_opts.l_opts.alpha = 1.0;
 mc_opts.l_opts.use_sosm = 1;
-mc_opts.l_opts.group_size = 5;
-mc_opts.l_opts.group_count = 5;
+mc_opts.l_opts.group_size = 4;
+mc_opts.l_opts.group_count = 6;
 mc_opts.l_opts.l_logreg = 1e-3;
-mc_opts.l_opts.l_class = 150.0;
+mc_opts.l_opts.l_class = 75.0;
 mc_opts.l_opts.l_smooth = 1e-3;
 mc_opts.l_opts.l_spars = 0.0;
-mc_opts.l_opts.ab_iters = 10;
+mc_opts.l_opts.ab_iters = 8;
 
 obs_count = size(X_all,1);
-train_size = 5000;
+train_size = 40000;
 test_size = 5000;
 
 for t=1:1,
@@ -38,27 +38,25 @@ for t=1:1,
     X_test = ZMUN(double(X_all(test_idx,:)));
     Y_test = Y_all(test_idx);
     mc_learner = MultiClassLearner(X_train,Y_train,mc_opts);
-    for j=1:10,
+    for j=1:100,
         fprintf('RESAMPLING TRAINING SET\n');
         clear('X_train');
         train_idx = setdiff(1:obs_count, test_idx);
         train_idx = randsample(train_idx, train_size);
         X_train = ZMUN(double(X_all(train_idx,:)));
         Y_train = Y_all(train_idx);
-        for r=1:2,
-            L = mc_learner.extend(X_train,Y_train);
-            [F Cf] = mc_learner.evaluate(X_train);
-            a_train = sum(Y_train==Cf) / numel(Y_train);
-            [F Cf] = mc_learner.evaluate(X_test);
-            a_test = sum(Y_test==Cf) / numel(Y_test);
-            fprintf('==========================================================\n');
-            fprintf('==========================================================\n');
-            fprintf('Rnd: %d, loss: %.4f, tr_acc: %.4f, te_acc: %.4f\n',...
-                r,L,a_train, a_test);
-            fprintf('==========================================================\n');
-            fprintf('==========================================================\n');
-            mc_learner.set_codewords(X_train,Y_train);
-        end
+        L = mc_learner.extend(X_train,Y_train);
+        [F Cf] = mc_learner.evaluate(X_train);
+        a_train = sum(Y_train==Cf) / numel(Y_train);
+        [F Cf] = mc_learner.evaluate(X_test);
+        a_test = sum(Y_test==Cf) / numel(Y_test);
+        fprintf('==========================================================\n');
+        fprintf('==========================================================\n');
+        fprintf('Rnd: %d, loss: %.4f, tr_acc: %.4f, te_acc: %.4f\n',...
+            j,L,a_train, a_test);
+        fprintf('==========================================================\n');
+        fprintf('==========================================================\n');
+        mc_learner.set_codewords(X_train,Y_train);
     end
 end
 % fprintf('==================================================\n');
