@@ -58,7 +58,7 @@ classdef BumpLearner < Learner
                 self.Ft = zeros(size(X,1),1);
             end
             if ~isfield(opts,'lambda')
-                self.lambda = 1e-2;
+                self.lambda = 1e-4;
             else
                 self.lambda = opts.lambda;
             end
@@ -139,8 +139,8 @@ classdef BumpLearner < Learner
             bump.grad_err = dLdF - bump.preds;
             % Evaluate the loss after adding this bump, and store bump info
             L = self.loss_func(F + bump.preds, Y, 1:obs_count);
-            %fprintf('    Bump scale: %.4f, bump weight: %.4f\n',...
-            %    bump.scale, bump.weight);
+            fprintf('    Bump scale: %.4f, bump weight: %.4f\n',...
+                bump.scale, bump.weight);
             if (keep_it == 1)
                 self.bumps{end + 1} = bump;
                 if (self.opt_train == 1)
@@ -245,7 +245,7 @@ classdef BumpLearner < Learner
             end
             % Set up the scales at which to check each bump
             small_scales = []; %linspace(0.1, 1.0, 5);
-            large_scales = linspace(0.5, 3.0, 20);
+            large_scales = linspace(0.5, 4.0, 25);
             scales = [small_scales large_scales];
             self.possi_bumps = cell(bump_count,1);
             for i=1:bump_count,
