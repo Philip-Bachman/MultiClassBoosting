@@ -129,27 +129,29 @@ classdef VecStumpLearner < Learner
                % For the current feature, check all possible split points, 
                % tracking best split point and its corresponding error
                for s_num=1:obs_count,
-                   % Compute the error for points left of the split
-                   l_err = cssq(s_num,:) - (csums(s_num,:).^2 ./ s_num);
-                   % Compute the error for points right of the split
-                   r_err = (cssq(end,:) - cssq(s_num,:)) - ...
-                       ((csums(end,:)-csums(s_num,:)).^2 ./ r_sz(s_num));
-                   % Compute the joint left/right error and check if it is best
-                   if ((sum(l_err) + sum(r_err)) < f_err)
-                       % For best error yet, record: error, left and right mean
-                       % vectors, and a splitting threshold.
-                       f_err = sum(l_err) + sum(r_err);
-                       f_v_l = csums(s_num,:) ./ norm(csums(s_num,:));
-                       f_v_r = (csums(end,:) - csums(s_num,:));
-                       f_v_r = f_v_r ./ norm(f_v_r);
-                       % Compute a partially randomized split point
-                       if (s_num < obs_count)
-                           f_val = f_vals(s_num) + ...
-                               (rand()*(f_vals(s_num+1)-f_vals(s_num)));
-                       else
-                           f_val = f_vals(obs_count) + 1;
+                   %if (s_num==obs_count || f_vals(s_num)<f_vals(s_num+1))
+                       % Compute the error for points left of the split
+                       l_err = cssq(s_num,:) - (csums(s_num,:).^2 ./ s_num);
+                       % Compute the error for points right of the split
+                       r_err = (cssq(end,:) - cssq(s_num,:)) - ...
+                           ((csums(end,:)-csums(s_num,:)).^2 ./ r_sz(s_num));
+                       % Compute the joint left/right error and check if best
+                       if ((sum(l_err) + sum(r_err)) < f_err)
+                           % For best error yet, record: error, left/right mean
+                           % vectors, and a splitting threshold.
+                           f_err = sum(l_err) + sum(r_err);
+                           f_v_l = csums(s_num,:) ./ norm(csums(s_num,:));
+                           f_v_r = (csums(end,:) - csums(s_num,:));
+                           f_v_r = f_v_r ./ norm(f_v_r);
+                           % Compute a partially randomized split point
+                           if (s_num < obs_count)
+                               f_val = f_vals(s_num) + ...
+                                   (rand()*(f_vals(s_num+1)-f_vals(s_num)));
+                           else
+                               f_val = f_vals(obs_count) + 1;
+                           end
                        end
-                   end
+                   %end
                end
                % Check if the best split point found for this feature is better
                % than any split point found for previously examined features

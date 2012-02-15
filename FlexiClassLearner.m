@@ -1,4 +1,4 @@
-classdef VecMultiClassLearner < Learner
+classdef FlexiClassLearner < Learner
     % A simple class for learning a boosted classifier for data coming from
     % multiple classes. All (numeric) class labels should be represented in the
     % class vector Y passed to the constructor. Class labels across training
@@ -13,8 +13,9 @@ classdef VecMultiClassLearner < Learner
     %                This should only be set to 1 if all training rounds will
     %                use the same training set of observations/classes.
     %   opts.l_const: constructor handle for base learner
-    %   opts.l_dim: this determines the dimension of the space into which
-    %               observations will be projected for classification
+    %   opts.l_count: This determines the dimensionality of the space into which
+    %                 observations will be projected for classification (and
+    %                 hence the number of boosted learners to train).
     %   opts.l_opts: options struct to pass to opts.l_const
     %   opts.alpha: This is currently ignored. It will determine the smoothing
     %               factor for the softmax used in multiclass loss.
@@ -23,12 +24,11 @@ classdef VecMultiClassLearner < Learner
     %
 
     properties
-        % lrnr is a handle for the boosted weak learner underlying this multi
-        % class classifier
-        lrnr
-        % l_dim is the dimension in which the underlying base learner will embed
-        % observations for classification
-        l_dim
+        % l_objs is a cell array containing the learners from which the meta,
+        % multiple classifier hypothesis (i.e. this class instance) is formed.
+        l_objs
+        % l_count is the number of base learners
+        l_count
         % c_labels contains the labels for each class
         c_labels
         % c_codes contains the codeword for each class, with the i'th row of
@@ -47,7 +47,7 @@ classdef VecMultiClassLearner < Learner
     
     methods
         
-        function [ self ] = VecMultiClassLearner(X, Y, opts)
+        function [ self ] = MultiClassLearner(X, Y, opts)
             % Simple constructor for Multiple Classifier boosting via
             % sum-of-softmax.
             %
@@ -70,12 +70,12 @@ classdef VecMultiClassLearner < Learner
                 self.alpha = opts.alpha;
             end
             if ~isfield(opts,'l_const')
-                opts.l_const = @VecStumpLearner;
+                opts.l_const = @StumpLearner;
             end
-            if ~isfield(opts,'l_dim')
-                self.l_dim = numel(unique(Y));
+            if ~isfield(opts,'l_count')
+                self.l_count = numel(unique(Y));
             else
-                self.l_dim = opts.l_dim;
+                self.l_count = opts.l_count;
             end
             if ~isfield(opts,'l_opts')
                 opts.l_opts = struct();
@@ -87,25 +87,28 @@ classdef VecMultiClassLearner < Learner
             else
                 self.opt_train = opts.do_opt;
                 self.Xt = X;
-                self.Ft = zeros(size(X,1),self.l_dim);
+                self.Ft = zeros(size(X,1),self.l_count);
             end
             % Find the classes present in Y and assign them codewords
             Cy = unique(Y);
             self.c_labels = Cy(:);
             self.c_codes = MultiClassLearner.init_codes(...
-                self.c_labels, self.l_dim);
-            % Create initial base learner from which the joint hypothesis will
+                self.c_labels, self.l_count);
+            % Create initial base learners from which the joint hypothesis will
             % be composed. We use a "dummy" Y, because all learners default to
             % setting a constant, and expect Y = {-1,+1}.
             Y = [ones(ceil(size(X,1)/2),1); -ones(floor(size(X,1)/2),1)];
             opts.l_opts.nu = self.nu;
-            opts.l_opts.l_dim = self.l_dim;
-            self.lrnr = opts.l_const(X, Y, opts.l_opts);
+            self.l_objs = {};
+            for i=1:self.l_count,
+                self.l_objs{i} = opts.l_const(X, Y, opts.l_opts);
+            end
             return
         end
         
         function [ L ] = extend(self, X, Y, keep_it)
-            % Extend the current base learner.
+            % Extend the current set of base learners. All learners will be
+            % updated, in a randomly selected order.
             %
             % Parameters:
             %   X: the observations to use in the updating process
@@ -118,15 +121,20 @@ classdef VecMultiClassLearner < Learner
             if ~exist('keep_it','var')
                 keep_it = 1;
             end
-            % Set learner loss function
-            self.lrnr.loss_func = @( Fl, Yl )...
-                self.compute_loss_grad(Fl, Yl, self.loss_func);
-            % Extend learner
-            L = self.lrnr.extend(X, Y, keep_it);
+            Fa = self.evaluate(X);
+            l_perm = randperm(self.l_count);
+            for i=1:self.l_count,
+                l_num = l_perm(i);
+                lrnr = self.l_objs{l_num};
+                lrnr.loss_func = @( fc, yc, ic )...
+                    self.loss_wrapper(fc, Fa, yc, self.loss_func, l_num, ic);
+                L = lrnr.extend(X, Y, keep_it);
+                Fa(:,l_num) = lrnr.evaluate(X);
+            end
             return
         end
         
-        function [ F C H ] = evaluate(self, X)
+        function [ F C ] = evaluate(self, X)
             % Evaluate the current set of base learners from which this meta
             % learner is composed.
             %
@@ -137,11 +145,48 @@ classdef VecMultiClassLearner < Learner
             %   F: matrix of vector outputs for each input in X
             %   C: class labels for each input in X
             %
-            F = self.lrnr.evaluate(X);
+            F = zeros(size(X,1),self.l_count);
+            % Compute output of each base learner for each 
+            for l_num=1:self.l_count,
+                lrnr = self.l_objs{l_num};
+                F(:,l_num) = lrnr.evaluate(X);
+            end
             % Compute the class labels given the hypothesis outputs
             H = F * self.c_codes';
             [max_vals max_idx] = max(H,[],2);
             C = reshape(self.c_labels(max_idx),size(H,1),1);
+            return
+        end
+        
+        function [ L dLdFc ] = loss_wrapper(self, Fc, Fa, Y, lfun, c_num, idx)
+            % Wrapper for evaluating multiclass loss and gradient, with respect
+            % to outputs of a single learner.
+            %
+            % Parameters:
+            %   Fc: the output of the hypothesis for which gradients will be
+            %       produced
+            %   Fa: the output of all hypothese (the column describing the
+            %       hypothesis under examination will be overwritten)
+            %   Y: target classes for each row/observation in F
+            %   lfun: the loss function to apply to inter-class gaps
+            %   c_num: the column number corresponding to the hypothesis under
+            %          examination
+            %   idx: indices into Fc/Fa/Y at which to evaluate loss and grads
+            % Outputs:
+            %   L: loss over the full set of hypotheses
+            %   dLdFc: single column of gradients of loss, with respect to the
+            %         hypothesis under examination
+            %
+            if ~exist('lfun','var')
+                lfun = self.loss_func;
+            end
+            Fa(:,c_num) = Fc(:);
+            if (nargout > 1)
+                [L dLdFa] = self.compute_loss_grad(Fa, Y, lfun, idx);
+                dLdFc = dLdFa(:,c_num);
+            else
+                L = self.compute_loss_grad(Fa, Y, lfun, idx);
+            end
             return
         end
         
@@ -313,7 +358,7 @@ classdef VecMultiClassLearner < Learner
             F = self.evaluate(X);
             funObj = @( c ) self.code_loss_grad(c, F, Y, self.loss_func);
             codes = minFunc(funObj, self.c_codes(:), options);
-            codes = reshape(codes,length(self.c_labels),self.l_dim);
+            codes = reshape(codes,length(self.c_labels),self.l_count);
             codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             self.c_codes = codes;
             return
@@ -322,28 +367,28 @@ classdef VecMultiClassLearner < Learner
     end % END METHODS
     methods (Static = true)
         
-        function [ step ] = find_step(F, Fs, loss_func)
+        function [ step ] = find_step(F, Fs, step_func)
             % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: loss_func(F + Fs.*step)
+            % minimizes: step_func(F + Fs.*step)
             options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
                 'Display','off');
-            [L dL] = loss_func(F);
+            [L dL] = step_func(F);
             if (sum(Fs.*dL) > 0)
-                step = fminbnd(@( s ) loss_func(F + Fs.*s), -1, 0, options);
+                step = fminbnd(@( s ) step_func(F + Fs.*s), -1, 0, options);
             else
-                step = fminbnd(@( s ) loss_func(F + Fs.*s), 0, 1, options);
+                step = fminbnd(@( s ) step_func(F + Fs.*s), 0, 1, options);
             end
             return
         end
         
-        function [ codes ] = init_codes(c_labels, l_dim)
+        function [ codes ] = init_codes(c_labels, l_count)
             % Generate an initial set of codewords for the classes whose labels
             % are contained in c_labels. The label really just determines the
             % number of codes to generate.
-            if (length(c_labels) == l_dim)
-                codes = eye(l_dim);
+            if (length(c_labels) == l_count)
+                codes = eye(l_count);
             else
-                codes = randn(length(c_labels),l_dim);
+                codes = randn(length(c_labels),l_count);
                 codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             end
             return
