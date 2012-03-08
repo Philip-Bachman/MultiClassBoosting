@@ -5,10 +5,8 @@ classdef FlexiClassLearner < Learner
     % sets must be consistent for training to be useful. 
     %
     %   opts.nu: shrinkage/regularization term for boosting
-    %   opts.loss_func: This is the loss function applied to differences between
-    %                   the dot products: <f(x_i), c(x_i)> - <f(x_i), ~c(x_i)>,
-    %                   where c(x_i) is the codeword for x_i's class, and
-    %                   ~c(x_i) is a codeword for any other class.
+    %   opts.loss_func: This is the loss function applied to differences in the
+    %                   distances to various class centers
     %   opts.do_opt: This indicates whether to use fast training optimization.
     %                This should only be set to 1 if all training rounds will
     %                use the same training set of observations/classes.
@@ -17,8 +15,8 @@ classdef FlexiClassLearner < Learner
     %                 observations will be projected for classification (and
     %                 hence the number of boosted learners to train).
     %   opts.l_opts: options struct to pass to opts.l_const
-    %   opts.alpha: This is currently ignored. It will determine the smoothing
-    %               factor for the softmax used in multiclass loss.
+    %   opts.lambda: This is the regularization weight, encouraging projection
+    %                of each observation to be near its class center
     %
     % Note: opts.l_opts.nu is overridden by opts.nu.
     %
@@ -35,8 +33,8 @@ classdef FlexiClassLearner < Learner
         % c_codes containing the codeword currently assigned to the i'th class
         % label in c_labels
         c_codes
-        % alpha is a scaling factor for sum-of-softmax
-        alpha
+        % lambda is a regularization weight
+        lambda
         % Xt is an optional fixed training set, used if opt_train==1
         Xt
         % Ft is the current output of this learner for each row in Xt
@@ -47,9 +45,9 @@ classdef FlexiClassLearner < Learner
     
     methods
         
-        function [ self ] = MultiClassLearner(X, Y, opts)
-            % Simple constructor for Multiple Classifier boosting via
-            % sum-of-softmax.
+        function [ self ] = FlexiClassLearner(X, Y, opts)
+            % Simple constructor for Multiclass Boosting using projections into
+            % a voronoi-decomposed space.
             %
             if ~exist('opts','var')
                 opts = struct();
@@ -64,10 +62,10 @@ classdef FlexiClassLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end 
-            if ~isfield(opts,'alpha')
-                self.alpha = 1.0;
+            if ~isfield(opts,'lambda')
+                self.lambda = 0.0;
             else
-                self.alpha = opts.alpha;
+                self.lambda = opts.lambda;
             end
             if ~isfield(opts,'l_const')
                 opts.l_const = @StumpLearner;
@@ -92,7 +90,7 @@ classdef FlexiClassLearner < Learner
             % Find the classes present in Y and assign them codewords
             Cy = unique(Y);
             self.c_labels = Cy(:);
-            self.c_codes = MultiClassLearner.init_codes(...
+            self.c_codes = FlexiClassLearner.init_codes(...
                 self.c_labels, self.l_count);
             % Create initial base learners from which the joint hypothesis will
             % be composed. We use a "dummy" Y, because all learners default to
@@ -134,7 +132,7 @@ classdef FlexiClassLearner < Learner
             return
         end
         
-        function [ F C ] = evaluate(self, X)
+        function [ F H C ] = evaluate(self, X)
             % Evaluate the current set of base learners from which this meta
             % learner is composed.
             %
@@ -143,6 +141,7 @@ classdef FlexiClassLearner < Learner
             %
             % Outputs:
             %   F: matrix of vector outputs for each input in X
+            %   H: matrix of distances to each class center
             %   C: class labels for each input in X
             %
             F = zeros(size(X,1),self.l_count);
@@ -152,9 +151,11 @@ classdef FlexiClassLearner < Learner
                 F(:,l_num) = lrnr.evaluate(X);
             end
             % Compute the class labels given the hypothesis outputs
-            H = F * self.c_codes';
-            [max_vals max_idx] = max(H,[],2);
-            C = reshape(self.c_labels(max_idx),size(H,1),1);
+            code_norms = diag(self.c_codes * self.c_codes');
+            code_norms = reshape(code_norms, 1, numel(code_norms));
+            H = repmat(code_norms, size(X,1), 1) - (2 * (F * self.c_codes'));
+            [min_vals min_idx] = min(H,[],2);
+            C = reshape(self.c_labels(min_idx),size(H,1),1);
             return
         end
         
@@ -191,13 +192,14 @@ classdef FlexiClassLearner < Learner
         end
         
         function [ L dLdF ] = compute_loss_grad(self, F, Y, loss_func, idx)
-            % Compute multiclass loss and gradient.
+            % Compute multiclass loss and gradient with respect to vector of
+            % hypothesis outputs for each example represented in F/Y
             %
             % Parameters:
             %   F: vector-valued output for each of the examples in X.
             %   Y: target class for each of the observations for which F was
             %      computed. This should match labels in self.c_labels
-            %   loss_func:loss function to use in computing gradients
+            %   loss_func: loss function to use in computing gradients
             %   idx: indices into F/Y at which to evaluate loss and grads
             % Outputs:
             %   L: average multiclass loss over the values in F and Y
@@ -222,42 +224,52 @@ classdef FlexiClassLearner < Learner
                 c_mask(Y == self.c_labels(c_num), c_num) = 1;
                 c_idx(Y == self.c_labels(c_num)) = c_num;
             end
-            % Compute the function outputs relative to each class codeword
+            % Compute the squared distance between each vector of hypothesis
+            % outputs and each class center.
+            code_norms = sum(self.c_codes'.^2);
+            F_norms = sum(F.^2,2);
             Fc = F * self.c_codes';
-            % Extract the output for each observation's target class
-            Fp = sum(Fc .* c_mask, 2);
-            % Compute differences between output for each observation's target
-            % class and output for all other classes
-            Fd = bsxfun(@plus, -Fc, Fp);
-            Lc = zeros(size(Fd));
+            Da = bsxfun(@plus, -2*Fc, code_norms);
+            Da = bsxfun(@plus, Da, F_norms);
+            % Extract the distance for each observation's target class
+            Dp = sum(Da .* c_mask, 2);
+            % Compute difference between distance for each observation's target
+            % class and distance for each other class
+            Dd = bsxfun(@minus, Da, Dp);
+            Lc = zeros(size(Dd));
             uno = ones(obs_count,1);
             for c_num=1:c_count,
-                lc = loss_func(Fd(:,c_num), uno, idx, 1);
+                lc = loss_func(Dd(:,c_num), uno, idx, 1);
                 Lc(:,c_num) = lc(:);
             end
-            % Zero-out the entries in Lc and dLc corresponding to the class to
-            % which each observation belongs.
-            Lc = -(Lc .* (c_mask - 1));
-            L = sum(sum(Lc)) / obs_count;
+            % Zero-out the entries in Lc corresponding to the class to which
+            % each observation belongs.
+            Lc = Lc .* -(c_mask - 1);
+            L = (sum(sum(Lc)) + (self.lambda * sum(sum(Da .* c_mask))))...
+                / obs_count;
             % Compute gradients if they are requested
-            if (nargout > 1)
+            if (nargout > 1)  
                 % dLc is gradient of loss with respect to the differences
-                % between dot products. dLc(i,j) is the derivative of the loss
-                % with respect to <f(x_i), c_{x_i}> - <f(x), c_j>, where c_{x_i}
-                % is the codeword for the class of x_i and c_j is the codeword
-                % for the j'th class
-                dLc = zeros(size(Fd));
+                % between distances. dLc(i,j) is the derivative of the loss
+                % with respect to ||f(x)- c_j||^2 - ||f(x_i), c_{x_i}||^2, where
+                % c_{x_i} is the codeword for the class of x_i and c_j is the
+                % codeword for the j'th class
+                dLc = zeros(size(Dd));
                 for c_num=1:c_count,
-                    [lc dlc] = loss_func(Fd(:,c_num), uno, idx, 1);
+                    [lc dlc] = loss_func(Dd(:,c_num), uno, idx, 1);
                     dLc(:,c_num) = dlc(:);
                 end
                 dLc = dLc .* -(c_mask - 1);
                 dLc_c = -sum(dLc,2);
-                %dLc_c = -min(dLc,[],2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
+                dGrads = zeros(size(F));
+                for c_num=1:c_count,
+                    dGrads(c_idx==c_num,:) = self.lambda * ...
+                        bsxfun(@minus,F(c_idx==c_num,:),self.c_codes(c_num,:));
+                end
                 % dLdF is the gradient of the loss with respect to the outputs
                 % of the learners from which the joint classifier is composed.
-                dLdF = -dLc * self.c_codes;
+                dLdF = 2 * (dGrads - (dLc * self.c_codes));
             end
             return
         end
@@ -281,12 +293,10 @@ classdef FlexiClassLearner < Learner
                 loss_func = self.loss_func;
             end
             obs_count = size(F,1);
-            idx = 1:obs_count;
             obs_dim = size(F,2);
+            idx = 1:obs_count;
             c_count = numel(codes) / obs_dim;
             codes = reshape(codes,c_count,obs_dim);
-            codes_scales = sqrt(sum(codes.^2,2) + 1e-8);
-            codes_normed = bsxfun(@rdivide, codes, codes_scales);
             % Get the index into self.c_labels and self.c_codes for each class
             % membership, and put these in a binary masking matrix
             c_idx = zeros(obs_count,1);
@@ -295,45 +305,55 @@ classdef FlexiClassLearner < Learner
                 c_mask(Y == self.c_labels(c_num), c_num) = 1;
                 c_idx(Y == self.c_labels(c_num)) = c_num;
             end
-            % Compute the function outputs relative to each class codeword
-            Fc = F * codes_normed';
-            % Extract the output for each observation's target class
-            Fp = sum(Fc .* c_mask, 2);
-            % Compute differences between output for each observation's target
-            % class and output for all other classes
-            Fd = bsxfun(@plus, -Fc, Fp);
-            Lc = zeros(size(Fd));
+            % Compute the squared distance between each vector of hypothesis
+            % outputs and each class center.
+            code_norms = sum(codes'.^2);
+            F_norms = sum(F.^2,2);
+            Fc = F * codes';
+            Da = bsxfun(@plus, -2*Fc, code_norms);
+            Da = bsxfun(@plus, Da, F_norms);
+            % Extract the distance for each observation's target class
+            Dp = sum(Da .* c_mask, 2);
+            % Compute difference between distance for each observation's target
+            % class and distance for each other class
+            Dd = bsxfun(@minus, Da, Dp);
+            Lc = zeros(size(Dd));
             uno = ones(obs_count,1);
             for c_num=1:c_count,
-                lc = loss_func(Fd(:,c_num), uno, idx, 1);
+                lc = loss_func(Dd(:,c_num), uno, idx, 1);
                 Lc(:,c_num) = lc(:);
             end
-            % Zero-out the entries in Lc and dLc corresponding to the class to
-            % which each observation belongs.
-            Lc = -(Lc .* (c_mask - 1));
-            L = sum(sum(Lc)) / obs_count;
+            % Zero-out the entries in Lc corresponding to the class to which
+            % each observation belongs.
+            Lc = Lc .* -(c_mask - 1);
+            L = (sum(sum(Lc)) + (self.lambda * sum(sum(Da .* c_mask))))...
+                / obs_count;
             % Compute gradients if they are requested
-            if (nargout > 1)
+            if (nargout > 1)  
                 % dLc is gradient of loss with respect to the differences
-                % between dot products. dLc(i,j) is the derivative of the loss
-                % with respect to <f(x_i), c_{x_i}> - <f(x_i), c_j>, where 
-                % c_{x_i} is codeword for class of x_i and c_j is the codeword
-                % for the j'th class
-                dLc = zeros(size(Fd));
+                % between distances. dLc(i,j) is the derivative of the loss
+                % with respect to ||f(x)-c_j||^2 - ||f(x_i)-c_{x_i}||^2, where
+                % c_{x_i} is the codeword for the class of x_i and c_j is the
+                % codeword for the j'th class
+                dLdD = zeros(size(Dd));
                 for c_num=1:c_count,
-                    [lc dlc] = loss_func(Fd(:,c_num), uno, idx, 1);
-                    dLc(:,c_num) = dlc(:);
+                    [lc dldd] = loss_func(Dd(:,c_num), uno, idx, 1);
+                    dLdD(:,c_num) = dldd(:);
                 end
-                dLc = dLc .* -(c_mask - 1);
+                dLc = dLdD .* -(c_mask - 1);
                 dLc_c = -sum(dLc,2);
-                %dLc_c = -min(dLc,[],2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
-                % dLdF is the gradient of the loss with respect to the outputs
-                % of the learners from which the joint classifier is composed.
-                dLdC = -dLc' * F;
-                dLdC = bsxfun(@rdivide, dLdC, codes_scales) -...
-                       bsxfun(@times, codes_normed, sum(dLdC.*codes, 2) ./...
-                       (codes_scales.^2));
+                % dLdC is the gradient of the loss with respect to the code
+                % elements for each class
+                sqGrads = zeros(size(codes));
+                dGrads = zeros(size(codes));
+                for c_num=1:c_count,
+                    sqGrads(c_num,:) = ...
+                        sum(bsxfun(@times,codes(c_num,:),dLc(:,c_num)));
+                    dGrads(c_num,:) = self.lambda * ...
+                        sum(bsxfun(@plus,-F(c_idx==c_num,:),codes(c_num,:)));
+                end
+                dLdC = 2 * (sqGrads + dGrads - (dLc' * F));
                 dLdC = dLdC(:);
             end
             return
@@ -346,21 +366,22 @@ classdef FlexiClassLearner < Learner
             %
             % Setup options for minFunc
             options = struct();
-            options.Display = 'off';
+            options.Display = 'iter';
             options.Method = 'lbfgs';
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.MaxIter = 75;
+            options.MaxIter = 10;
             options.MaxFunEvals = 100;
-            options.TolX = 1e-8;
+            options.TolX = 1e-10;
             % Set the loss function for code optimization
             F = self.evaluate(X);
             funObj = @( c ) self.code_loss_grad(c, F, Y, self.loss_func);
             codes = minFunc(funObj, self.c_codes(:), options);
             codes = reshape(codes,length(self.c_labels),self.l_count);
-            codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             self.c_codes = codes;
+            fprintf('Code norms:\n');
+            display(sqrt(sum(self.c_codes'.^2)));
             return
         end
         
@@ -389,7 +410,7 @@ classdef FlexiClassLearner < Learner
                 codes = eye(l_count);
             else
                 codes = randn(length(c_labels),l_count);
-                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
+                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)).*2);
             end
             return
         end

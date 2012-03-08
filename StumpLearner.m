@@ -193,21 +193,21 @@ classdef StumpLearner < Learner
                f_val = 0;
                cs_l = cumsum(f_grad);
                cs_r = -cs_l + cs_l(end);
+               cs_lr = abs(cs_l) + abs(cs_r);
+               [cs_vals cs_idx] = sort(cs_lr,'descend');
                % For the current feature, check all possible split points, 
                % tracking best split point and its corresponding gap
                for s_num=1:obs_count,
-                   % Compute the left->right sums and check if it is best yet
-                   if ((abs(cs_l(s_num)) + abs(cs_r(s_num))) > f_sum)
-                       if (s_num==obs_count || f_vals(s_num)<f_vals(s_num+1))
-                           f_sum = abs(cs_l(s_num)) + abs(cs_r(s_num));
-                           % Compute a partially randomized split point
-                           if (s_num < obs_count)
-                               f_val = f_vals(s_num) + ...
-                                   (rand()*(f_vals(s_num+1)-f_vals(s_num)));
-                           else
-                               f_val = f_vals(obs_count) + 1;
-                           end
+                   idx = cs_idx(s_num);
+                   if ((idx == obs_count) || (f_vals(idx) < f_vals(idx+1)))
+                       f_sum = cs_vals(s_num);
+                       if (idx < obs_count)                       
+                           f_val = f_vals(idx) + ...
+                                       (rand()*(f_vals(idx+1)-f_vals(idx)));
+                       else
+                           f_val = 1e10;
                        end
+                       break
                    end
                end
                % Check if the best split point found for this feature is better
@@ -239,7 +239,7 @@ classdef StumpLearner < Learner
                 F = self.evaluate(X);
             end
             L_new = self.loss_func(F, Y, 1:obs_count);
-            if (L_new > L)
+            if (L_new - L > 1e-5)
                 error('oops: loss increase in stump extension\n');
             end
             L = L_new;

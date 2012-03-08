@@ -101,10 +101,17 @@ classdef TreeLearner < Learner
                     leaf = old_leaves{l_num};
                     leaf.has_children = true;
                     leaf_idx = leaf.sample_idx;
-                    % Greedily split this leaf
-                    leaf_X = X(leaf_idx,:);
-                    leaf_dL = dL(leaf_idx);
-                    [split_f split_t] = TreeLearner.find_split(leaf_X, leaf_dL);
+                    if (numel(leaf_idx) > 0)
+                        % Greedily split this leaf
+                        leaf_X = X(leaf_idx,:);
+                        leaf_dL = dL(leaf_idx);
+                        [split_f split_t] = TreeLearner.find_split(leaf_X, leaf_dL);
+
+                    else
+                        % This leaf contains none of the training samples
+                        split_f = 1;
+                        split_t = 0;
+                    end
                     % Set split info in the split leaf
                     leaf.split_feat = split_f;
                     leaf.split_val = split_t;
@@ -123,9 +130,13 @@ classdef TreeLearner < Learner
             % Set weight in each leaf of the generated tree
             for l_num=1:length(new_leaves),
                 leaf = new_leaves{l_num};
-                step_func = @( f ) self.loss_func(f, Y, leaf.sample_idx);
-                weight = TreeLearner.find_step(F, step_func);
-                leaf.weight = weight * self.nu;
+                if (numel(leaf.sample_idx) > 0)
+                    step_func = @( f ) self.loss_func(f, Y, leaf.sample_idx);
+                    weight = TreeLearner.find_step(F, step_func);
+                    leaf.weight = weight * self.nu;
+                else
+                    leaf.weight = 0;
+                end
             end
             % Append the generated tree to the set of trees from which this
             % learner is composed.
@@ -201,39 +212,41 @@ classdef TreeLearner < Learner
             %   best_feat: feature on which split occurred
             %   best_thresh: threshold for split
             %
+            obs_dim = size(X,2);
+            obs_count = size(X,1);
             best_feat = 0;
             best_thresh = 0;
-            best_gap = 0;
+            best_sum = 0;
             % Compute the best split point for each feature, tracking best
             % feat/split pair
             for f_num=1:size(X,2),
                [f_vals f_idx] = sort(X(:,f_num),'ascend');
                f_grad = dL(f_idx);
-               f_gap = 0;
+               f_sum = 0;
                f_val = 0;
-               csums = cumsum(f_grad);
+               cs_l = cumsum(f_grad);
+               cs_r = -cs_l + cs_l(end);
+               cs_lr = abs(cs_l) + abs(cs_r);
+               [cs_vals cs_idx] = sort(cs_lr,'descend');
                % For the current feature, check all possible split points, 
                % tracking best split point and its corresponding gap
-               for s_num=1:size(X,1),
-                   % Compute the left->right gap and check if it is best yet.
-                   % The term "abs(2*csums(s_num) - csums(end))" is equal to the
-                   % magnitude of the difference between the sum of gradients
-                   % left of the split and right of the split.
-                   if (abs(2*csums(s_num) - csums(end)) > f_gap)
-                       f_gap = abs(2*csums(s_num) - csums(end));
-                       % Compute a partially randomized split point
-                       if (s_num < size(X,1))
-                           f_val = f_vals(s_num) + ...
-                               (rand()*(f_vals(s_num+1)-f_vals(s_num)));
+               for s_num=1:obs_count,
+                   idx = cs_idx(s_num);
+                   if ((idx == obs_count) || (f_vals(idx) < f_vals(idx+1)))
+                       f_sum = cs_vals(s_num);
+                       if (idx < obs_count)                       
+                           f_val = f_vals(idx) + ...
+                                       (rand()*(f_vals(idx+1)-f_vals(idx)));
                        else
-                           f_val = f_vals(size(X,1)) + 1;
+                           f_val = 1e10;
                        end
+                       break
                    end
                end
                % Check if the best split point found for this feature is better
                % than any split point found for previously examined features
-               if (f_gap > best_gap)
-                   best_gap = f_gap;
+               if (f_sum > best_sum)
+                   best_sum = f_sum;
                    best_feat = f_num;
                    best_thresh = f_val;
                end

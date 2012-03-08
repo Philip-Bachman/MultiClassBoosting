@@ -2,46 +2,78 @@ clear;
 
 load('satimage.mat');
 
-bump_count = 150;
+% n4idx = Y_train ~= 4;
+% X_train = X_train(n4idx,:);
+% Y_train = Y_train(n4idx);
+% n4idx = Y_test ~= 4;
+% X_test = X_test(n4idx,:);
+% Y_test = Y_test(n4idx);
+
 mc_opts = struct();
-mc_opts.nu = 0.1;
-mc_opts.loss_func = @loss_bindev;
-mc_opts.l_count = 10;
-mc_opts.l_const = @StumpLearner;
+mc_opts.nu = 0.2;
+mc_opts.loss_func = @loss_hingesq;
+mc_opts.l_count = 6;
+mc_opts.l_const = @InfluenceLearner;
+mc_opts.lambda = 5e-2;
+mc_opts.l_opts.max_depth = 4;
 mc_opts.l_opts.extend_all = 1;
+mc_opts.l_opts.vor_count = 4;
+mc_opts.l_opts.vor_samples = 500;
 mc_opts.l_opts.l_const = @StumpLearner;
 mc_opts.l_opts.l_count = 2;
-mc_opts.l_opts.l_rounds = 4;
-mc_opts.l_opts.bump_count = bump_count;
-mc_opts.l_opts.lambda = 1e-2;
 
-mc_learner = MultiClassLearner(X_train,Y_train,mc_opts);
-for r=1:30,
+fig = figure();
+mc_learner = FlexiClassLearner(X_train,Y_train,mc_opts);
+for r=1:20,
     fprintf('==================================================\n');
     fprintf('META ROUND %d...\n',r);
     for i=1:5,
-        tidx = randsample(1:size(X_train,1), 4000);
+        tidx = randsample(1:size(X_train,1), 3500);
         L = mc_learner.extend(X_train(tidx,:),Y_train(tidx));
-        [F Cf] = mc_learner.evaluate(X_train);
-        a_train = sum(Y_train==Cf) / numel(Y_train);
-        [F Cf] = mc_learner.evaluate(X_test);
-        a_test = sum(Y_test==Cf) / numel(Y_test);
+        [F H C] = mc_learner.evaluate(X_train);
+        a_train = sum(Y_train==C) / numel(Y_train);
+        [F H C] = mc_learner.evaluate(X_test);
+        a_test = sum(Y_test==C) / numel(Y_test);
         fprintf('Round: %d, train_loss: %.4f, train_acc: %.4f, test_acc: %.4f\n',...
             i,L,a_train, a_test);
     end
     mc_learner.set_codewords(X_train,Y_train);
+%     s_styles = {'ro','go','bo','ko','r+','g+','b+','k+'};
+%     l_styles = {'r-','g-','b-','k-','r-.','g-.','b-.','k-.'};
+%     [Ft Ht Ct] = mc_learner.evaluate(X_test);
+%     Yt = Y_test;
+%     Yc = unique(Y_test);
+%     figure(fig); clf(); hold on; axis square;
+%     for i=1:length(Yc),
+%         idx = Yt == Yc(i);
+%         c = mc_learner.c_codes(i,:);
+%         if (size(Ft,2) == 2)
+%             scatter(Ft(idx,1),Ft(idx,2),s_styles{i});
+%             line([0 c(1)],[0 c(2)]);
+%         else
+%             scatter3(Ft(idx,1),Ft(idx,2),Ft(idx,3),s_styles{i});
+%             line([0 c(1)],[0 c(2)],[0 c(3)]);
+%         end
+%     end
+%     drawnow();
 end
 
-% Yc = unique(Y_test);
 % s_styles = {'ro','go','bo','ko','r+','g+','b+','k+'};
 % l_styles = {'r-','g-','b-','k-','r-.','g-.','b-.','k-.'};
-% [F Cf] = mc_learner.evaluate(X_test);
+% [Ft Ht Ct] = mc_learner.evaluate(X_test);
+% Yt = Y_test;
+% Yc = unique(Y_test);
 % figure(); hold on; axis square;
 % for i=1:length(Yc),
-%     idx = Y_test == Yc(i);
-%     c = mc_learner.c_codes(i,:) .* 5;
-%     scatter3(F(idx,1),F(idx,2),F(idx,3),s_styles{i});
-%     line([0 c(1)],[0 c(2)],[0 c(3)]);
+%     idx = Yt == Yc(i);
+%     c = mc_learner.c_codes(i,:);
+%     if (size(Ft,2) == 2)
+%         scatter(Ft(idx,1),Ft(idx,2),s_styles{i});
+%         line([0 c(1)],[0 c(2)]);
+%     else
+%         scatter3(Ft(idx,1),Ft(idx,2),Ft(idx,3),s_styles{i});
+%         line([0 c(1)],[0 c(2)],[0 c(3)]);
+%     end
 % end
 
     
@@ -58,8 +90,8 @@ end
 %     end
 %     for i=1:5,
 %         L = mc_learner.extend(Xt,Yt);
-%         [F Cf] = mc_learner.evaluate(X_test);
-%         a = sum(Y_test==Cf) / numel(Y_test);
+%         [F H C] = mc_learner.evaluate(X_test);
+%         a = sum(Y_test==C) / numel(Y_test);
 %         fprintf('Round: %d, train_loss: %.4f, test_acc: %.4f\n',i,L,a);
 %     end
 %     mc_learner.set_codewords(X_train,Y_train);

@@ -90,7 +90,7 @@ classdef MultiClassLearner < Learner
                 self.Ft = zeros(size(X,1),self.l_count);
             end
             % Find the classes present in Y and assign them codewords
-            Cy = unique(Y);
+            Cy = sort(unique(Y),'ascend');
             self.c_labels = Cy(:);
             self.c_codes = MultiClassLearner.init_codes(...
                 self.c_labels, self.l_count);
@@ -134,7 +134,7 @@ classdef MultiClassLearner < Learner
             return
         end
         
-        function [ F C ] = evaluate(self, X)
+        function [ F H C ] = evaluate(self, X)
             % Evaluate the current set of base learners from which this meta
             % learner is composed.
             %
@@ -142,8 +142,9 @@ classdef MultiClassLearner < Learner
             %   X: the observations for which to evaluate the classifier
             %
             % Outputs:
-            %   F: matrix of vector outputs for each input in X
-            %   C: class labels for each input in X
+            %   F: matrix of hypothesis outputs for each input in X
+            %   H: matrix of class outputs for each input in X
+            %   C: inferred class labels for each input in X
             %
             F = zeros(size(X,1),self.l_count);
             % Compute output of each base learner for each 
@@ -253,7 +254,6 @@ classdef MultiClassLearner < Learner
                 end
                 dLc = dLc .* -(c_mask - 1);
                 dLc_c = -sum(dLc,2);
-                %dLc_c = -min(dLc,[],2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
                 % dLdF is the gradient of the loss with respect to the outputs
                 % of the learners from which the joint classifier is composed.
@@ -277,6 +277,7 @@ classdef MultiClassLearner < Learner
             %   L: average multiclass loss over the values in F and Y
             %   dLdC: gradients of L with respect to each element of F
             %
+            lam = 1e-1; % Sparsifying penalty
             if ~exist('loss_func','var')
                 loss_func = self.loss_func;
             end
@@ -311,7 +312,8 @@ classdef MultiClassLearner < Learner
             % Zero-out the entries in Lc and dLc corresponding to the class to
             % which each observation belongs.
             Lc = -(Lc .* (c_mask - 1));
-            L = sum(sum(Lc)) / obs_count;
+            L = (sum(sum(Lc)) / obs_count); % + ...
+                %((lam / c_count) * sum(sum(abs(codes))));
             % Compute gradients if they are requested
             if (nargout > 1)
                 % dLc is gradient of loss with respect to the differences
@@ -326,14 +328,14 @@ classdef MultiClassLearner < Learner
                 end
                 dLc = dLc .* -(c_mask - 1);
                 dLc_c = -sum(dLc,2);
-                %dLc_c = -min(dLc,[],2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
-                % dLdF is the gradient of the loss with respect to the outputs
-                % of the learners from which the joint classifier is composed.
-                dLdC = -dLc' * F;
+                % dLdC is the gradient of the loss with respect to the elements
+                % of the codewords for each class
+                dLdC = -(dLc' * F) ./ obs_count;
                 dLdC = bsxfun(@rdivide, dLdC, codes_scales) -...
                        bsxfun(@times, codes_normed, sum(dLdC.*codes, 2) ./...
                        (codes_scales.^2));
+                %dLdC = dLdC + ((lam / c_count) * sign(codes));
                 dLdC = dLdC(:);
             end
             return
@@ -351,7 +353,7 @@ classdef MultiClassLearner < Learner
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.MaxIter = 75;
+            options.MaxIter = 20;
             options.MaxFunEvals = 100;
             options.TolX = 1e-8;
             % Set the loss function for code optimization
