@@ -25,7 +25,7 @@ for i=1:obs_count,
     if (mod(i, round(obs_count/20)) == 0)
         fprintf('.');
     end
-    D = sqrt(sum(bsxfun(@minus,X_train,X_test(i,:)).^2,2));
+    D = sum(bsxfun(@minus,X_train,X_test(i,:)).^2,2);
     [d_val idx_perm] = sort(D,'ascend');
     d_idx = c_idx(idx_perm,:);
     cd_min = sum(d_val);

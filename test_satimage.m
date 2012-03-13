@@ -2,33 +2,28 @@ clear;
 
 load('satimage.mat');
 
-% n4idx = Y_train ~= 4;
-% X_train = X_train(n4idx,:);
-% Y_train = Y_train(n4idx);
-% n4idx = Y_test ~= 4;
-% X_test = X_test(n4idx,:);
-% Y_test = Y_test(n4idx);
+X_train = ZMUV(X_train);
+X_test = ZMUV(X_test);
 
 mc_opts = struct();
-mc_opts.nu = 0.2;
-mc_opts.loss_func = @loss_hingesq;
-mc_opts.l_count = 6;
+mc_opts.nu = 1.0;
+mc_opts.loss_func = @loss_hinge;
+mc_opts.l_count = 10;
 mc_opts.l_const = @InfluenceLearner;
-mc_opts.lambda = 5e-2;
-mc_opts.l_opts.max_depth = 4;
+mc_opts.lambda = 1e-2;
+mc_opts.l_opts.max_depth = 2;
 mc_opts.l_opts.extend_all = 1;
-mc_opts.l_opts.vor_count = 4;
-mc_opts.l_opts.vor_samples = 500;
+mc_opts.l_opts.lambda = 1e-3;
 mc_opts.l_opts.l_const = @StumpLearner;
 mc_opts.l_opts.l_count = 2;
 
-fig = figure();
-mc_learner = FlexiClassLearner(X_train,Y_train,mc_opts);
-for r=1:20,
+% fig = figure();
+mc_learner = MultiClassLearner(X_train,Y_train,mc_opts);
+for r=1:10,
     fprintf('==================================================\n');
     fprintf('META ROUND %d...\n',r);
     for i=1:5,
-        tidx = randsample(1:size(X_train,1), 3500);
+        tidx = randsample(1:size(X_train,1), 4400);
         L = mc_learner.extend(X_train(tidx,:),Y_train(tidx));
         [F H C] = mc_learner.evaluate(X_train);
         a_train = sum(Y_train==C) / numel(Y_train);

@@ -1,4 +1,4 @@
-classdef MultiClassLearner < Learner
+classdef SparseClassLearner < Learner
     % A simple class for learning a boosted classifier for data coming from
     % multiple classes. All (numeric) class labels should be represented in the
     % class vector Y passed to the constructor. Class labels across training
@@ -17,8 +17,8 @@ classdef MultiClassLearner < Learner
     %                 observations will be projected for classification (and
     %                 hence the number of boosted learners to train).
     %   opts.l_opts: options struct to pass to opts.l_const
-    %   opts.alpha: This is currently ignored. It will determine the smoothing
-    %               factor for the softmax used in multiclass loss.
+    %   opts.lam_l2: l2 regularization weight for class codes
+    %   opts.lam_l1: l1 regularization weight for class codes
     %
     % Note: opts.l_opts.nu is overridden by opts.nu.
     %
@@ -35,8 +35,10 @@ classdef MultiClassLearner < Learner
         % c_codes containing the codeword currently assigned to the i'th class
         % label in c_labels
         c_codes
-        % alpha is a scaling factor for sum-of-softmax
-        alpha
+        % lam_l2 is a regularization weight on code words
+        lam_l2
+        % lam_l1 is a regularization weight on code words
+        lam_l1
         % Xt is an optional fixed training set, used if opt_train==1
         Xt
         % Ft is the current output of this learner for each row in Xt
@@ -47,7 +49,7 @@ classdef MultiClassLearner < Learner
     
     methods
         
-        function [ self ] = MultiClassLearner(X, Y, opts)
+        function [ self ] = SparseClassLearner(X, Y, opts)
             % Simple constructor for Multiple Classifier boosting via
             % sum-of-softmax.
             %
@@ -64,10 +66,15 @@ classdef MultiClassLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end 
-            if ~isfield(opts,'alpha')
-                self.alpha = 1.0;
+            if ~isfield(opts,'lam_l2')
+                self.lam_l2 = 0.0;
             else
-                self.alpha = opts.alpha;
+                self.lam_l2 = opts.lam_l2;
+            end
+            if ~isfield(opts,'lam_l1')
+                self.lam_l1 = 0.0;
+            else
+                self.lam_l1 = opts.lam_l1;
             end
             if ~isfield(opts,'l_const')
                 opts.l_const = @StumpLearner;
@@ -92,7 +99,7 @@ classdef MultiClassLearner < Learner
             % Find the classes present in Y and assign them codewords
             Cy = sort(unique(Y),'ascend');
             self.c_labels = Cy(:);
-            self.c_codes = MultiClassLearner.init_codes(...
+            self.c_codes = SparseClassLearner.init_codes(...
                 self.c_labels, self.l_count);
             % Create initial base learners from which the joint hypothesis will
             % be composed. We use a "dummy" Y, because all learners default to
@@ -285,8 +292,6 @@ classdef MultiClassLearner < Learner
             obs_dim = size(F,2);
             c_count = numel(codes) / obs_dim;
             codes = reshape(codes,c_count,obs_dim);
-            codes_scales = sqrt(sum(codes.^2,2) + 1e-8);
-            codes_normed = bsxfun(@rdivide, codes, codes_scales);
             % Get the index into self.c_labels and self.c_codes for each class
             % membership, and put these in a binary masking matrix
             c_idx = zeros(obs_count,1);
@@ -296,7 +301,7 @@ classdef MultiClassLearner < Learner
                 c_idx(Y == self.c_labels(c_num)) = c_num;
             end
             % Compute the function outputs relative to each class codeword
-            Fc = F * codes_normed';
+            Fc = F * codes';
             % Extract the output for each observation's target class
             Fp = sum(Fc .* c_mask, 2);
             % Compute differences between output for each observation's target
@@ -311,7 +316,9 @@ classdef MultiClassLearner < Learner
             % Zero-out the entries in Lc and dLc corresponding to the class to
             % which each observation belongs.
             Lc = -(Lc .* (c_mask - 1));
-            L = (sum(sum(Lc)) / obs_count);
+            L = (sum(sum(Lc)) / obs_count) + ...
+                ((self.lam_l2 / numel(codes)) * sum(sum(codes.^2))) + ...
+                ((self.lam_l1 / numel(codes)) * sum(sum(abs(codes))));
             % Compute gradients if they are requested
             if (nargout > 1)
                 % dLc is gradient of loss with respect to the differences
@@ -329,10 +336,9 @@ classdef MultiClassLearner < Learner
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
                 % dLdC is the gradient of the loss with respect to the elements
                 % of the codewords for each class
-                dLdC = -(dLc' * F) ./ obs_count;
-                dLdC = bsxfun(@rdivide, dLdC, codes_scales) -...
-                       bsxfun(@times, codes_normed, sum(dLdC.*codes, 2) ./...
-                       (codes_scales.^2));
+                dLdC = -(dLc' * F) ./ obs_count + ...
+                    ((2 * self.lam_l2 / numel(codes)) * codes) + ...
+                    ((self.lam_l1 / numel(codes)) * sign(codes));
                 dLdC = dLdC(:);
             end
             return
@@ -350,16 +356,25 @@ classdef MultiClassLearner < Learner
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.MaxIter = 20;
-            options.MaxFunEvals = 100;
+            options.MaxIter = 10;
+            options.MaxFunEvals = 75;
             options.TolX = 1e-8;
             % Set the loss function for code optimization
             F = self.evaluate(X);
             funObj = @( c ) self.code_loss_grad(c, F, Y, self.loss_func);
             codes = minFunc(funObj, self.c_codes(:), options);
             codes = reshape(codes,length(self.c_labels),self.l_count);
-            codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             self.c_codes = codes;
+            display(sqrt(sum(self.c_codes'.^2)));
+            display(kurtosis(self.c_codes(:)));
+            return
+        end
+        
+        function [ codes ] = set_lambdas(self, lam_l2, lam_l1)
+            % Set the regularization weights (here for ease of weight setting)
+            self.lam_l2 = lam_l2;
+            self.lam_l1 = lam_l1;
+            codes = self.c_codes;
             return
         end
         
@@ -388,7 +403,7 @@ classdef MultiClassLearner < Learner
                 codes = eye(l_count);
             else
                 codes = randn(length(c_labels),l_count);
-                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
+                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)).*4);
             end
             return
         end
@@ -396,4 +411,3 @@ classdef MultiClassLearner < Learner
     end % END METHODS (STATIC)
     
 end % END CLASSDEF
-
