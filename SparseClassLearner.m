@@ -365,8 +365,8 @@ classdef SparseClassLearner < Learner
             codes = minFunc(funObj, self.c_codes(:), options);
             codes = reshape(codes,length(self.c_labels),self.l_count);
             self.c_codes = codes;
-            display(sqrt(sum(self.c_codes'.^2)));
-            display(kurtosis(self.c_codes(:)));
+            %display(sqrt(sum(self.c_codes'.^2)));
+            %display(kurtosis(self.c_codes(:)));
             return
         end
         

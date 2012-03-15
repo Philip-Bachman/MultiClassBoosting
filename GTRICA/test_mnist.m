@@ -1,3 +1,5 @@
+clear
+clc
 % test multiclass MNIST digit classification using a GTRICA base learner
 % CHANGE
 % Good settings:
@@ -13,21 +15,21 @@ reset(stream,round(1000*c(6)));
 
 mc_opts = struct();
 mc_opts.loss_func = @loss_hinge;
-mc_opts.l_count = 30;
+mc_opts.l_count = 32;
 mc_opts.l_const = @GtricaLearner;
 mc_opts.l_opts.alpha = 1.0;
 mc_opts.l_opts.use_sosm = 1;
 mc_opts.l_opts.group_size = 4;
-mc_opts.l_opts.group_count = 6;
+mc_opts.l_opts.group_count = 8;
 mc_opts.l_opts.l_logreg = 1e-3;
 mc_opts.l_opts.l_class = 75.0;
 mc_opts.l_opts.l_smooth = 1e-3;
 mc_opts.l_opts.l_spars = 0.0;
-mc_opts.l_opts.ab_iters = 8;
+mc_opts.l_opts.ab_iters = 6;
 
 obs_count = size(X_all,1);
 train_size = 40000;
-test_size = 5000;
+test_size = 7500;
 
 for t=1:1,
     train_idx = randsample(1:obs_count, train_size);
