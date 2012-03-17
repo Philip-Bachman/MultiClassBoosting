@@ -14,6 +14,7 @@
 clear;
 warning off all;
 load('segment.mat');
+X = ZMUV(X);
 stream = RandStream.getDefaultStream();
 c = clock();
 reset(stream,round(1000*c(6)));
@@ -23,11 +24,12 @@ mc_opts.nu = 0.1;
 mc_opts.loss_func = @loss_bindev;
 mc_opts.lam_l2 = 0.4;
 mc_opts.lam_l1 = 0.1;
-mc_opts.l_count = 16;
-mc_opts.l_const = @StumpLearner;
+mc_opts.l_count = 10;
+mc_opts.l_const = @SparseLearner;
 mc_opts.extend_all = 1;
 mc_opts.l_opts.l_const = @StumpLearner;
 mc_opts.l_opts.l_count = 2;
+mc_opts.l_opts.nz_count = 4;
 
 obs_count = size(X,1);
 test_size = round(obs_count/5);
@@ -45,11 +47,11 @@ for t=1:round_count,
     X_test = X(test_idx,:);
     Y_test = Y(test_idx);
     mc_learner = SparseClassLearner(X_train,Y_train,mc_opts);
-    for r=1:8,
+    for r=1:10,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);
         for i=1:5,
-            tidx = randsample(size(X_train,1), round(size(X_train,1)/1.5));
+            tidx = randsample(size(X_train,1), round(size(X_train,1)/2.0));
             ntidx = setdiff(1:size(X_train,1),tidx);
             L = mc_learner.extend(X_train(tidx,:),Y_train(tidx,:));
             [F H C] = mc_learner.evaluate(X_train(tidx,:));
