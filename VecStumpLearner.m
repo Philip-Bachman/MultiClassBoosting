@@ -140,7 +140,8 @@ classdef VecStumpLearner < Learner
                            % For best error yet, record: error, left/right mean
                            % vectors, and a splitting threshold.
                            f_err = sum(l_err) + sum(r_err);
-                           f_v_l = csums(s_num,:) ./ norm(csums(s_num,:));
+                           f_v_l = csums(s_num,:);
+                           f_v_vl = f_v_l ./ norm(f_v_l);
                            f_v_r = (csums(end,:) - csums(s_num,:));
                            f_v_r = f_v_r ./ norm(f_v_r);
                            % Compute a partially randomized split point

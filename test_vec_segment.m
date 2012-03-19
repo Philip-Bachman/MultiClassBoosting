@@ -4,10 +4,10 @@ warning off all;
 load('segment.mat');
 
 mc_opts = struct();
-mc_opts.nu = 0.25;
+mc_opts.nu = 0.5;
 mc_opts.do_opt = 1;
 mc_opts.loss_func = @loss_bindev;
-mc_opts.l_dim = 15;
+mc_opts.l_dim = 10;
 mc_opts.l_const = @VecStumpLearner;
 
 obs_count = size(X,1);
@@ -24,7 +24,7 @@ for t=1:3,
     for r=1:30,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);
-        mcl_1.lrnr.p = r / 15;
+        %mcl_1.lrnr.p = r / 15;
         for i=1:10,
             tidx = 1:size(X_train,1);
             L = mcl_1.extend(X_train(tidx,:),Y_train(tidx));

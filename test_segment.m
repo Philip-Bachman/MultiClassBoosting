@@ -22,10 +22,9 @@ reset(stream,round(1000*c(6)));
 mc_opts = struct();
 mc_opts.nu = 0.1;
 mc_opts.loss_func = @loss_bindev;
-mc_opts.lam_l2 = 0.4;
-mc_opts.lam_l1 = 0.1;
-mc_opts.l_count = 10;
-mc_opts.l_const = @SparseLearner;
+mc_opts.lam_l1 = 0.01;
+mc_opts.l_count = 30;
+mc_opts.l_const = @StumpLearner;
 mc_opts.extend_all = 1;
 mc_opts.l_opts.l_const = @StumpLearner;
 mc_opts.l_opts.l_count = 2;
@@ -46,8 +45,8 @@ for t=1:round_count,
 %     Y_train(shuf_idx) = Y_train(shuf_idx(randperm(numel(shuf_idx))));
     X_test = X(test_idx,:);
     Y_test = Y(test_idx);
-    mc_learner = SparseClassLearner(X_train,Y_train,mc_opts);
-    for r=1:10,
+    mc_learner = SparseClassLearnerNEW(X_train,Y_train,mc_opts);
+    for r=1:20,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);
         for i=1:5,
@@ -65,7 +64,7 @@ for t=1:round_count,
                 i,L,a_train, a_test);
         end
         mc_learner.set_codewords(X_train,Y_train);
-        mc_learner.lam_l1 = mc_learner.lam_l1 * 1.1;
+        mc_learner.lam_l1 = mc_learner.lam_l1 * 1.25;
     end
     mc_learners{t} = mc_learner;
 end
