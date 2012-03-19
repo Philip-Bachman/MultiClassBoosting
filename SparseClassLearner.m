@@ -17,7 +17,6 @@ classdef SparseClassLearner < Learner
     %                 observations will be projected for classification (and
     %                 hence the number of boosted learners to train).
     %   opts.l_opts: options struct to pass to opts.l_const
-    %   opts.lam_l2: l2 regularization weight for class codes
     %   opts.lam_l1: l1 regularization weight for class codes
     %
     % Note: opts.l_opts.nu is overridden by opts.nu.
@@ -35,8 +34,6 @@ classdef SparseClassLearner < Learner
         % c_codes containing the codeword currently assigned to the i'th class
         % label in c_labels
         c_codes
-        % lam_l2 is a regularization weight on code words
-        lam_l2
         % lam_l1 is a regularization weight on code words
         lam_l1
         % Xt is an optional fixed training set, used if opt_train==1
@@ -66,11 +63,6 @@ classdef SparseClassLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end 
-            if ~isfield(opts,'lam_l2')
-                self.lam_l2 = 0.0;
-            else
-                self.lam_l2 = opts.lam_l2;
-            end
             if ~isfield(opts,'lam_l1')
                 self.lam_l1 = 0.0;
             else
@@ -292,6 +284,9 @@ classdef SparseClassLearner < Learner
             obs_dim = size(F,2);
             c_count = numel(codes) / obs_dim;
             codes = reshape(codes,c_count,obs_dim);
+            codes_scales = sqrt(sum(codes.^2,2) + 1e-8);
+            codes_normed = bsxfun(@rdivide, codes, codes_scales);
+            codes_nabs = sqrt(codes_normed.^2 + 1e-6);
             % Get the index into self.c_labels and self.c_codes for each class
             % membership, and put these in a binary masking matrix
             c_idx = zeros(obs_count,1);
@@ -301,7 +296,7 @@ classdef SparseClassLearner < Learner
                 c_idx(Y == self.c_labels(c_num)) = c_num;
             end
             % Compute the function outputs relative to each class codeword
-            Fc = F * codes';
+            Fc = F * codes_normed';
             % Extract the output for each observation's target class
             Fp = sum(Fc .* c_mask, 2);
             % Compute differences between output for each observation's target
@@ -317,8 +312,7 @@ classdef SparseClassLearner < Learner
             % which each observation belongs.
             Lc = -(Lc .* (c_mask - 1));
             L = (sum(sum(Lc)) / obs_count) + ...
-                ((self.lam_l2 / numel(codes)) * sum(sum(codes.^2))) + ...
-                ((self.lam_l1 / numel(codes)) * sum(sum(abs(codes))));
+                (self.lam_l1 / numel(codes)) * sum(sum(codes_nabs));
             % Compute gradients if they are requested
             if (nargout > 1)
                 % dLc is gradient of loss with respect to the differences
@@ -336,9 +330,11 @@ classdef SparseClassLearner < Learner
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
                 % dLdC is the gradient of the loss with respect to the elements
                 % of the codewords for each class
-                dLdC = -(dLc' * F) ./ obs_count + ...
-                    ((2 * self.lam_l2 / numel(codes)) * codes) + ...
-                    ((self.lam_l1 / numel(codes)) * sign(codes));
+                dLdC = -((dLc' * F) ./ obs_count) + ...
+                    (self.lam_l1 / numel(codes)) * (codes_normed ./ codes_nabs);
+                dLdC = bsxfun(@rdivide, dLdC, codes_scales) -...
+                       bsxfun(@times, codes_normed, sum(dLdC.*codes, 2) ./...
+                       (codes_scales.^2));
                 dLdC = dLdC(:);
             end
             return
@@ -364,9 +360,10 @@ classdef SparseClassLearner < Learner
             funObj = @( c ) self.code_loss_grad(c, F, Y, self.loss_func);
             codes = minFunc(funObj, self.c_codes(:), options);
             codes = reshape(codes,length(self.c_labels),self.l_count);
+            codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             self.c_codes = codes;
             %display(sqrt(sum(self.c_codes'.^2)));
-            %display(kurtosis(self.c_codes(:)));
+            display(kurtosis(self.c_codes(:)));
             return
         end
         
@@ -403,7 +400,7 @@ classdef SparseClassLearner < Learner
                 codes = eye(l_count);
             else
                 codes = randn(length(c_labels),l_count);
-                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)).*4);
+                codes = bsxfun(@rdivide, codes, sqrt(sum(codes.^2,2)));
             end
             return
         end
