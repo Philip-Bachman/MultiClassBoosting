@@ -4,14 +4,14 @@ warning off all;
 load('segment.mat');
 
 mc_opts = struct();
-mc_opts.nu = 0.5;
-mc_opts.do_opt = 1;
+mc_opts.nu = 1.0;
+mc_opts.do_opt = 0;
 mc_opts.loss_func = @loss_bindev;
 mc_opts.l_dim = 10;
 mc_opts.l_const = @VecStumpLearner;
 
 obs_count = size(X,1);
-test_size = round(obs_count/2);
+test_size = round(obs_count/5);
 
 for t=1:3,
     test_idx = randsample(1:obs_count,test_size);
@@ -21,12 +21,12 @@ for t=1:3,
     X_test = X(test_idx,:);
     Y_test = Y(test_idx);
     mcl_1 = VecMultiClassLearner(X_train,Y_train,mc_opts);
-    for r=1:30,
+    for r=1:15,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);
-        %mcl_1.lrnr.p = r / 15;
-        for i=1:10,
-            tidx = 1:size(X_train,1);
+        mcl_1.lrnr.p = 2.0;
+        for i=1:20,
+            tidx = randsample(size(X_train,1),round(size(X_train,1)/2.0));
             L = mcl_1.extend(X_train(tidx,:),Y_train(tidx));
             [F Cf] = mcl_1.evaluate(X_train);
             a_train = sum(Y_train==Cf) / numel(Y_train);

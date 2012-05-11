@@ -237,17 +237,20 @@ classdef VecStumpLearner < Learner
                r_sums_sa = sqrt(r_sums.^2 + 1e-8).^self.p;
                l_sums_sa = bsxfun(@rdivide,(l_sums.*l_sums_sa),sum(l_sums_sa,2));
                r_sums_sa = bsxfun(@rdivide,(r_sums.*r_sums_sa),sum(r_sums_sa,2));
+               sums_sas = sum(abs(l_sums_sa),2) + sum(abs(r_sums_sa),2);
                % For the current feature, check all possible split points, 
                % tracking best split point and its corresponding error
                for s_num=1:obs_count,
                    % Compute the joint left/right sums and check if it is best
-                   l_vec = l_sums_sa(s_num,:);
-                   r_vec = r_sums_sa(s_num,:);
                    if (s_num == obs_count || f_vals(s_num) < f_vals(s_num+1))
-                       if ( ( sum(abs(l_vec)) + sum(abs(r_vec)) ) > f_sum )
+                       if ( sums_sas(s_num) > f_sum )
                            % For best sum yet, record: sum, left and right mean
                            % vectors, and a splitting threshold.
-                           f_sum = sum(abs(l_vec)) + sum(abs(r_vec));
+                           f_sum = sums_sas(s_num);
+                           l_vec = l_sums_sa(s_num,:);
+                           r_vec = r_sums_sa(s_num,:);
+                           %l_vec = sign(l_sums(s_num,:));
+                           %r_vec = sign(r_sums(s_num,:));
                            f_v_l = l_vec ./ norm(l_vec);
                            f_v_r = r_vec ./ norm(r_vec);
                            % Compute a partially randomized split point
