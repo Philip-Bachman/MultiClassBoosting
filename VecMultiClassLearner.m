@@ -126,7 +126,7 @@ classdef VecMultiClassLearner < Learner
             return
         end
         
-        function [ F C H ] = evaluate(self, X)
+        function [ F H C ] = evaluate(self, X)
             % Evaluate the current set of base learners from which this meta
             % learner is composed.
             %
@@ -135,6 +135,7 @@ classdef VecMultiClassLearner < Learner
             %
             % Outputs:
             %   F: matrix of vector outputs for each input in X
+            %   H: matrix of hypothesis outputs for each class code
             %   C: class labels for each input in X
             %
             F = self.lrnr.evaluate(X);

@@ -35,7 +35,7 @@ obs_count = size(X,1);
 test_size = round(obs_count/4);
 
 mc_learners = {};
-round_count = 10;
+round_count = 1;
 test_accs = zeros(round_count,1);
 for t=1:round_count,
     test_idx = randsample(1:obs_count,test_size);

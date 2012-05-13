@@ -95,14 +95,12 @@ classdef StumpLearner < Learner
             end
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
-            % Compute a split point based on the computed gradient
+            % Compute the best split point for each feature. Array feat_info
+            % stores: feat_info(i,1) is the best error for the i'th feature,
+            % and feat_info(i,2) is the split-point that produces it.
             feat_count = size(X,2);
-            best_feat = 0;
-            best_thresh = 0;
-            best_err = sum(dL.^2);
+            feat_info = zeros(feat_count, 2);
             r_sz = [(obs_count-1):-1:1 1];
-            % Compute the best split point for each feature, tracking best
-            % feat/split pair
             for f_num=1:feat_count,
                [f_vals f_idx] = sort(X(:,f_num),'ascend');
                f_grad = dL(f_idx);
@@ -133,14 +131,13 @@ classdef StumpLearner < Learner
                        end
                    end
                end
-               % Check if the best split point found for this feature is better
-               % than any split point found for previously examined features
-               if (f_err < best_err)
-                   best_err = f_err;
-                   best_feat = f_num;
-                   best_thresh = f_val;
-               end
+               % Record the best error and split-point for this feature
+               feat_info(f_num,1) = f_err;
+               feat_info(f_num,2) = f_val;
             end
+            % Find the best feature/split-point pair
+            [best_err best_feat] = min(feat_info(:,1));
+            best_thresh = feat_info(best_feat,2);
             % For the best split point, compute left and right weights
             idx = find(X(:,best_feat) <= best_thresh);
             w_l = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
@@ -179,13 +176,12 @@ classdef StumpLearner < Learner
             end
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
-            % Compute a split point based on the computed gradient
-            feat_count = size(X,2);
-            best_feat = 0;
-            best_thresh = 0;
-            best_sum = 0;
             % Compute the best split point for each feature, tracking best
-            % feat/split pair
+            % feat/split pair. Array feat_info(i,1) contains the best found
+            % "sum" for the i'th feature and feat_info(i,2) contains the split 
+            % point which produced that sum.
+            feat_count = size(X,2);
+            feat_info = zeros(feat_count, 2);
             for f_num=1:feat_count,
                [f_vals f_idx] = sort(X(:,f_num),'ascend');
                f_grad = dL(f_idx);
@@ -210,19 +206,14 @@ classdef StumpLearner < Learner
                        break
                    end
                end
-               % Check if the best split point found for this feature is better
-               % than any split point found for previously examined features
-               if (f_sum > best_sum)
-                   best_sum = f_sum;
-                   best_feat = f_num;
-                   best_thresh = f_val;
-               end
+               % Record the best "sum" and corresponding split for this feat
+               feat_info(f_num,1) = f_sum;
+               feat_info(f_num,2) = f_val;
             end
-            if (best_feat == 0)
-                best_feat = 1;
-                best_thresh = 1e10;
-            end
-            % For the best split point, compute left and right weights
+            % Find the feature/split-point pairing producing the best "sum"
+            [best_sum best_feat] = max(feat_info(:,1));
+            best_thresh = feat_info(best_feat,2);
+            % For the best feature/split, compute left and right weights
             idx = find(X(:,best_feat) <= best_thresh);
             w_l = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
             idx = find(X(:,best_feat) > best_thresh);

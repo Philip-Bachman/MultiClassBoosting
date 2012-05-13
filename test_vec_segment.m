@@ -28,9 +28,9 @@ for t=1:3,
         for i=1:20,
             tidx = randsample(size(X_train,1),round(size(X_train,1)/2.0));
             L = mcl_1.extend(X_train(tidx,:),Y_train(tidx));
-            [F Cf] = mcl_1.evaluate(X_train);
+            [F H Cf] = mcl_1.evaluate(X_train);
             a_train = sum(Y_train==Cf) / numel(Y_train);
-            [F Cf] = mcl_1.evaluate(X_test);
+            [F H Cf] = mcl_1.evaluate(X_test);
             a_test = sum(Y_test==Cf) / numel(Y_test);
             fprintf('Round: %d, train_loss: %.4f, train_acc: %.4f, test_acc: %.4f\n',...
                 i,L,a_train, a_test);
