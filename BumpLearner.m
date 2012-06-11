@@ -6,9 +6,6 @@ classdef BumpLearner < Learner
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.loss_func: Loss function handle to a function that can be wrapped
     %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.lambda: Regularization weight for controlling bump width
     %   opts.bump_count: The number of potential bump centers to consider
     %
@@ -23,12 +20,6 @@ classdef BumpLearner < Learner
         % lambda is a regularization weight controlling the tradeoff between
         % bump breadth and precision of gradient fitting during boosting.
         lambda
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end
     
     methods
@@ -47,15 +38,6 @@ classdef BumpLearner < Learner
                 self.loss_func = @loss_bindev;
             else
                 self.loss_func = opts.loss_func;
-            end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),1);
             end
             if ~isfield(opts,'lambda')
                 self.lambda = 1e-4;
@@ -79,12 +61,7 @@ classdef BumpLearner < Learner
             if ~exist('keep_it','var')
                 keep_it = 1;
             end
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             obs_count = size(X,1);
             [L dLdF] = self.loss_func(F, Y, 1:obs_count);
             % The parameters zeta and alpha are a "flattener" and a "weakener" 
@@ -132,7 +109,7 @@ classdef BumpLearner < Learner
             % amount  of this bump to add to the current learner.
             idx = 1:size(F,1);
             step_func = @( f ) self.loss_func(f, Y, idx);
-            [ w ] = BumpLearner.find_step(F, bump.preds, step_func, idx);
+            [ w ] = self.find_step(F, bump.preds, step_func);
             bump.weight = w * self.nu;
             bump.preds = bump.preds .* bump.weight;
             bump.grad = dLdF;
@@ -143,10 +120,6 @@ classdef BumpLearner < Learner
                 bump.scale, bump.weight);
             if (keep_it == 1)
                 self.bumps{end + 1} = bump;
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft + ...
-                        self.evaluate(self.Xt, length(self.bumps));
-                end
             end
             return 
         end
@@ -206,7 +179,7 @@ classdef BumpLearner < Learner
             % current predictions of the bumps in self.bumps
             idx = 1:size(Y,1);
             step_func = @( f ) self.loss_func(f, Y, idx);
-            [ w ] = BumpLearner.find_step(F, Fs, step_func, idx);
+            [ w ] = self.find_step(F, Fs, step_func);
             L = self.loss_func(F + Fs.*w, Y);
             % Inject the constant bump structure into self.bumps
             bump = struct();
@@ -267,19 +240,6 @@ classdef BumpLearner < Learner
     end
     
     methods (Static = true)
-        function [ step ] = find_step(F, Fs, loss_func, idx)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: loss_func(F + Fs.*step)
-            options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
-                'Display','off');
-            [L dL] = loss_func(F);
-            if (sum(Fs(idx).*dL) > 0)
-                step = fminbnd(@( s ) loss_func(F + Fs.*s), -3, 0, options);
-            else
-                step = fminbnd(@( s ) loss_func(F + Fs.*s), 0, 3, options);
-            end
-            return
-        end
         
         function [ dfunc ] = get_dfunc(X, W, mu)
             % Get a suitable distance function/kernelish thing for a bump

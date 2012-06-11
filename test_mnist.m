@@ -4,7 +4,7 @@
 clear;
 warning off all;
 % Load MNIST data
-load('mnist_data.mat');
+load('datasets/mnist_data.mat');
 X = ZMUV(double(X_train));
 Y = Y_train;
 % % Remove data, to only learn for a subset of digits
@@ -46,7 +46,7 @@ for t=1:round_count,
 %     Y_train(shuf_idx) = Y_train(shuf_idx(randperm(numel(shuf_idx))));
     X_test = X(test_idx,:);
     Y_test = Y(test_idx);
-    mc_learner = SparseClassLearner(X_train,Y_train,mc_opts);
+    mc_learner = MultiClassLearner(X_train,Y_train,mc_opts);
     for r=1:20,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);

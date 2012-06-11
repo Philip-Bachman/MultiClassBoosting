@@ -31,5 +31,30 @@ classdef Learner < handle
         result = evaluate(observations)
     end
     
+    methods
+        function [ step ] = find_step(self, F, Fs, step_func)
+            % Use Matlab unconstrained optimization to find a step length that
+            % minimizes: loss_func(F + (Fs .* step))
+            step_opts = optimset('MaxFunEvals',50,'TolX',1e-3,'TolFun',...
+                1e-3,'Display','off');
+            [L dL] = step_func(F);
+            Fd = Fs;
+            if (numel(dL) ~= numel(Fs))
+                % This should only occur when estimating step for learners that
+                % use a "homogeneous" step direction 
+                if (sum(Fs) ~= numel(Fs))
+                    error('Subindex loss function only for constant steps.\n');
+                end
+                Fd = ones(size(dL));
+            end
+            if (sum(Fd.*dL) > 0)
+                step = fminbnd(@( s ) step_func(F + (Fs.*s)), -10, 0, step_opts);
+            else
+                step = fminbnd(@( s ) step_func(F + (Fs.*s)), 0, 10, step_opts);
+            end
+            return
+        end
+    end
+    
 end
 

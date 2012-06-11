@@ -1,0 +1,85 @@
+Faces_easy_image_0332 <-> Faces_image_0266
+accordion_image_0015 <-> minaret_image_0050
+accordion_image_0015 <-> pagoda_image_0017
+accordion_image_0015 <-> trilobite_image_0006
+airplanes_image_0646 <-> ferry_image_0020
+airplanes_image_0646 <-> helicopter_image_0021
+anchor_image_0016 <-> grand_piano_image_0015
+ant_image_0042 <-> cannon_image_0025
+ant_image_0042 <-> crab_image_0061
+ant_image_0042 <-> crayfish_image_0052
+ant_image_0042 <-> scorpion_image_0064
+beaver_image_0009 <-> platypus_image_0024
+binocular_image_0031 <-> headphone_image_0004
+brain_image_0055 <-> nautilus_image_0006
+buddha_image_0064 <-> ketch_image_0084
+buddha_image_0064 <-> metronome_image_0030
+buddha_image_0064 <-> schooner_image_0042
+camera_image_0018 <-> cup_image_0019
+cannon_image_0025 <-> crayfish_image_0052
+cannon_image_0025 <-> scorpion_image_0064
+car_side_image_0014 <-> dollar_bill_image_0040
+ceiling_fan_image_0038 <-> wrench_image_0032
+cellphone_image_0002 <-> electric_guitar_image_0002
+cellphone_image_0002 <-> revolver_image_0072
+cellphone_image_0002 <-> stapler_image_0021
+chair_image_0019 <-> stop_sign_image_0014
+cougar_body_image_0026 <-> rhino_image_0048
+cougar_face_image_0067 <-> panda_image_0019
+crab_image_0061 <-> crayfish_image_0052
+crab_image_0061 <-> lobster_image_0035
+crab_image_0061 <-> scorpion_image_0064
+crayfish_image_0052 <-> scorpion_image_0064
+crocodile_head_image_0011 <-> crocodile_image_0046
+crocodile_head_image_0011 <-> hawksbill_image_0092
+crocodile_image_0046 <-> hawksbill_image_0092
+dalmatian_image_0041 <-> sea_horse_image_0038
+electric_guitar_image_0002 <-> revolver_image_0072
+electric_guitar_image_0002 <-> stapler_image_0021
+elephant_image_0051 <-> emu_image_0043
+elephant_image_0051 <-> gerenuk_image_0006
+emu_image_0043 <-> gerenuk_image_0006
+emu_image_0043 <-> llama_image_0038
+ferry_image_0020 <-> helicopter_image_0021
+flamingo_head_image_0027 <-> lamp_image_0035
+gerenuk_image_0006 <-> llama_image_0038
+gramophone_image_0004 <-> inline_skate_image_0017
+hedgehog_image_0019 <-> starfish_image_0018
+kangaroo_image_0044 <-> llama_image_0038
+kangaroo_image_0044 <-> okapi_image_0025
+ketch_image_0084 <-> metronome_image_0030
+ketch_image_0084 <-> schooner_image_0042
+llama_image_0038 <-> okapi_image_0025
+lotus_image_0010 <-> water_lilly_image_0029
+menorah_image_0035 <-> windsor_chair_image_0054
+metronome_image_0030 <-> schooner_image_0042
+minaret_image_0050 <-> pagoda_image_0017
+minaret_image_0050 <-> trilobite_image_0006
+pagoda_image_0017 <-> trilobite_image_0006
+revolver_image_0072 <-> stapler_image_0021
+soccer_ball_image_0002 <-> yin_yang_image_0050
+>> binopdf(6,60,0.5)
+
+ans =
+
+   4.3423e-11
+
+>> binopdf(6,54,0.5)
+
+ans =
+
+   1.4337e-09
+
+>> binopdf(6,55,0.5)
+
+ans =
+
+   8.0463e-10
+
+>> 
+
+% Points were k-means clustered 20 times, and these pairs represent classes
+% which were co-clustered at least 19/20 times. Clustering was on the
+% average Euclidean distance between class centroids over 10 rounds of 15
+% dimensional embedding, which were clustered after projection on the 15
+% main principal components of the average distance matrices.

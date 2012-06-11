@@ -7,9 +7,6 @@ classdef StumpLearner < Learner
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.loss_func: Loss function handle to a function that can be wrapped
     %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %
     
     properties
@@ -18,14 +15,6 @@ classdef StumpLearner < Learner
         % the value at which to split, row(3) being the value left of the split,
         % and row(4) being the value right of the split.
         stumps
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
-        % step_opts stores options for self.find_step()
-        step_opts
     end
     
     methods
@@ -45,20 +34,10 @@ classdef StumpLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),1);
-            end
-            self.step_opts = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',...
-                1e-3,'Display','off');
             idx = 1:size(X,1);
             F = zeros(size(X,1),1);
-            [ s ] = self.find_step(F, @(f)self.loss_func(f,Y,idx));
+            Fs = ones(size(F));
+            [ s ] = self.find_step( F, Fs, @(f)self.loss_func(f,Y,idx) );
             self.stumps = [1 0 s s];
             return
         end
@@ -87,12 +66,7 @@ classdef StumpLearner < Learner
         function [ L ] = extend_lsq(self, X, Y, keep_it)
             % Extend the current set of stumps, based on the observations in X
             % and the loss/grad function loss_func. Return the post-update loss
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
             % Compute the best split point for each feature. Array feat_info
@@ -139,28 +113,19 @@ classdef StumpLearner < Learner
             [best_err best_feat] = min(feat_info(:,1));
             best_thresh = feat_info(best_feat,2);
             % For the best split point, compute left and right weights
+            Fs = ones(size(F));
             idx = find(X(:,best_feat) <= best_thresh);
-            w_l = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
+            w_l = self.find_step(F, Fs, @( f ) self.loss_func(f, Y, idx));
             idx = find(X(:,best_feat) > best_thresh);
-            w_r = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
+            w_r = self.find_step(F, Fs, @( f ) self.loss_func(f, Y, idx));
             % Append the best split found as a new (reweighted) stump
             stump = [best_feat best_thresh (w_l*self.nu) (w_r*self.nu)];
             self.stumps = [self.stumps; stump];
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.evaluate(self.Xt, size(self.stumps,1));
-                self.Ft = self.Ft + Ft_new;
-                F = self.Ft;
-            else
-                F = self.evaluate(X);
-            end
+            F = self.evaluate(X);
             L = self.loss_func(F, Y, 1:obs_count);
             % Undo addition of stump if keep_it ~= 1
             if (keep_it ~= 1)
                 self.stumps = self.stumps(1:end-1,:);
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft - Ft_new;
-                end
             end
             return 
         end
@@ -168,12 +133,7 @@ classdef StumpLearner < Learner
         function [ L ] = extend_mdm(self, X, Y, keep_it)
             % Extend the current set of stumps, based on the observations in X
             % and the loss/grad function loss_func. Return the post-update loss
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
             % Compute the best split point for each feature, tracking best
@@ -214,21 +174,15 @@ classdef StumpLearner < Learner
             [best_sum best_feat] = max(feat_info(:,1));
             best_thresh = feat_info(best_feat,2);
             % For the best feature/split, compute left and right weights
+            Fs = ones(size(F));
             idx = find(X(:,best_feat) <= best_thresh);
-            w_l = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
+            w_l = self.find_step(F, Fs, @( f ) self.loss_func(f, Y, idx));
             idx = find(X(:,best_feat) > best_thresh);
-            w_r = self.find_step(F, @( f ) self.loss_func(f, Y, idx));
+            w_r = self.find_step(F, Fs, @( f ) self.loss_func(f, Y, idx));
             % Append the best split found as a new (reweighted) stump
             stump = [best_feat best_thresh (w_l*self.nu) (w_r*self.nu)];
             self.stumps = [self.stumps; stump];
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.evaluate(self.Xt, size(self.stumps,1));
-                self.Ft = self.Ft + Ft_new;
-                F = self.Ft;
-            else
-                F = self.evaluate(X);
-            end
+            F = self.evaluate(X);
             L_new = self.loss_func(F, Y, 1:obs_count);
             if (L_new - L > 1e-5)
                 error('oops: loss increase in stump extension\n');
@@ -237,9 +191,6 @@ classdef StumpLearner < Learner
             % Undo addition of stump if keep_it ~= 1
             if (keep_it ~= 1)
                 self.stumps = self.stumps(1:end-1,:);
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft - Ft_new;
-                end
             end
             return 
         end
@@ -264,27 +215,9 @@ classdef StumpLearner < Learner
                 F(~l_idx) = F(~l_idx) + self.stumps(s_idx,4);
             end
             return
-        end       
-
-        function [ step ] = find_step(self, F, step_func)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: loss_func(F + Fs.*step)
-            [L dL] = step_func(F);
-            if (sum(dL) > 0)
-                step = fminbnd(@( s ) step_func(F + s), -1, 0, self.step_opts);
-            else
-                step = fminbnd(@( s ) step_func(F + s), 0, 1, self.step_opts);
-            end
-%             function [obj grad] = step_loss( s )
-%                 [obj grad] = loss_func(F + Fs.*s);
-%                 grad = sum(grad.*Fs);
-%             end
-%             options = optimset('MaxFunEvals',30,'TolFun',1e-3,'GradObj','on',...
-%                 'Display','off');
-%             step = fminunc(@step_loss, 0.0, options);
-            return
         end
-    end
-    
-end
+        
+    end % END METHODS
+   
+end % END CLASSDEF
 

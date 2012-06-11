@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="453.5433"
+   height="340.15747"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="flower_tree_fig.pdf"
+   version="1.0"
+   inkscape:export-filename="/home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/flower_tree_fig.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 170.07874 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="453.5433 : 170.07874 : 1"
+       inkscape:persp3d-origin="226.77165 : 113.38582 : 1"
+       id="perspective2826" />
+    <inkscape:perspective
+       id="perspective2836"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2850"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2864"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2878"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2892"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2906"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2920"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2934"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2948"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2962"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2976"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2990"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3004"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3018"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3032"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3046"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3060"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.540463"
+     inkscape:cx="207.53628"
+     inkscape:cy="178.20032"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1403"
+     inkscape:window-height="958"
+     inkscape:window-x="121"
+     inkscape:window-y="40"
+     width="12.8cm"
+     height="9.6cm"
+     units="cm"
+     showgrid="true"
+     grid_units="mm"
+     inkscape:object-paths="false"
+     inkscape:grid-points="true"
+     inkscape:grid-bbox="true"
+     inkscape:guide-points="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-maximized="0">
+    <sodipodi:guide
+       orientation="vertical"
+       position="-27.913686,340.15748"
+       id="guide3573" />
+    <sodipodi:guide
+       orientation="horizontal"
+       position="0.64915548,375.86102"
+       id="guide3579" />
+    <sodipodi:guide
+       orientation="horizontal"
+       position="368.50394,-49.606299"
+       id="guide3886" />
+    <sodipodi:guide
+       orientation="horizontal"
+       position="0.64915548,375.86102"
+       id="guide3988" />
+    <sodipodi:guide
+       orientation="horizontal"
+       position="0.64915548,375.86102"
+       id="guide4081" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(4.149475e-6,-698.0315)">
+    <g
+       id="g3087"
+       transform="matrix(1.2613562,0,0,1.2105262,-117.49131,-148.44577)">
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/bluebell.jpg"
+         width="63.779533"
+         height="56.69289"
+         id="image2838"
+         x="240.94489"
+         y="775.98425" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/fritillary.jpg"
+         width="63.779533"
+         height="56.692944"
+         id="image2852"
+         x="99.212585"
+         y="775.98419" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/crocus.jpg"
+         width="63.779533"
+         height="56.692936"
+         id="image2866"
+         x="170.07874"
+         y="775.98425" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/pansy.jpg"
+         width="63.779526"
+         height="56.692902"
+         id="image2880"
+         x="240.94489"
+         y="705.1181" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/iris.jpg"
+         width="63.779526"
+         height="56.692894"
+         id="image2894"
+         x="311.811"
+         y="705.1181" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/windflower.jpg"
+         width="63.77953"
+         height="56.692886"
+         id="image2908"
+         x="170.07874"
+         y="705.1181" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/lilyvalley.jpg"
+         width="63.779518"
+         height="56.692924"
+         id="image2922"
+         x="311.811"
+         y="775.98425" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/snowdrop.jpg"
+         width="63.637817"
+         height="56.692905"
+         id="image2936"
+         x="382.67715"
+         y="775.98425" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/cowslip.jpg"
+         width="63.77953"
+         height="56.692894"
+         id="image2950"
+         x="134.64566"
+         y="846.8504" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/tulip.jpg"
+         width="63.779526"
+         height="56.692894"
+         id="image2964"
+         x="205.51181"
+         y="846.8504" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/buttercup.jpg"
+         width="63.779514"
+         height="56.692894"
+         id="image2978"
+         x="276.37796"
+         y="846.8504" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/daffodil.jpg"
+         width="56.692924"
+         height="56.692894"
+         id="image2992"
+         x="347.24408"
+         y="846.8504" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/daisy.jpg"
+         width="63.779541"
+         height="56.69289"
+         id="image3006"
+         x="99.212578"
+         y="917.71655" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/sunflower.jpg"
+         width="63.77953"
+         height="56.69289"
+         id="image3020"
+         x="170.07874"
+         y="917.71655" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/tigerlily.jpg"
+         width="63.779522"
+         height="56.680866"
+         id="image3034"
+         x="240.94489"
+         y="917.72858" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/dandelion.jpg"
+         width="63.637787"
+         height="56.69289"
+         id="image3048"
+         x="311.95276"
+         y="917.71655" />
+      <image
+         xlink:href="file:///home/ml/pbachman/Desktop/MultiClassBoosting/flower17_results/class_ims/coltsfoot.jpg"
+         width="64.283478"
+         height="56.69289"
+         id="image3062"
+         x="382.67715"
+         y="917.71655" />
+    </g>
+    <rect
+       style="fill:none;stroke:#2cadff;stroke-width:1.77165353999999997;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect3106"
+       width="270.48737"
+       height="76.903778"
+       x="91.8255"
+       y="701.57184"
+       ry="0" />
+    <rect
+       style="fill:none;stroke:#00fe00;stroke-opacity:1;stroke-width:1.77165353999999997;stroke-miterlimit:4;stroke-dasharray:none;stroke-linejoin:round"
+       id="rect3880"
+       width="447.26816"
+       height="81.14444"
+       x="3.2457774"
+       y="87.635986"
+       transform="translate(-4.149475e-6,698.0315)" />
+    <rect
+       style="fill:none;stroke:#4b13e9;stroke-width:1.77165353999999997;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-linejoin:round"
+       id="rect3882"
+       width="353.14685"
+       height="79.203217"
+       x="46.086872"
+       y="872.00195" />
+    <rect
+       style="fill:none;stroke:#ff0000;stroke-width:1.77165353999999997;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-linejoin:round"
+       id="rect3884"
+       width="444.70203"
+       height="76.001747"
+       x="4.528811"
+       y="958.95673" />
+  </g>
+</svg>

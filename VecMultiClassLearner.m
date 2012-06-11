@@ -9,9 +9,6 @@ classdef VecMultiClassLearner < Learner
     %                   the dot products: <f(x_i), c(x_i)> - <f(x_i), ~c(x_i)>,
     %                   where c(x_i) is the codeword for x_i's class, and
     %                   ~c(x_i) is a codeword for any other class.
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.l_const: constructor handle for base learner
     %   opts.l_dim: this determines the dimension of the space into which
     %               observations will be projected for classification
@@ -37,12 +34,6 @@ classdef VecMultiClassLearner < Learner
         c_codes
         % alpha is a scaling factor for sum-of-softmax
         alpha
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end % END PROPERTIES
     
     methods
@@ -80,15 +71,6 @@ classdef VecMultiClassLearner < Learner
             if ~isfield(opts,'l_opts')
                 opts.l_opts = struct();
             end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),self.l_dim);
-            end
             % Find the classes present in Y and assign them codewords
             Cy = unique(Y);
             self.c_labels = Cy(:);
@@ -123,6 +105,7 @@ classdef VecMultiClassLearner < Learner
                 self.compute_loss_grad(Fl, Yl, self.loss_func);
             % Extend learner
             L = self.lrnr.extend(X, Y, keep_it);
+            lrnr.loss_func = [];
             return
         end
         
@@ -307,7 +290,7 @@ classdef VecMultiClassLearner < Learner
             options.Corr = 5;
             options.LS = 1;
             options.LS_init = 3;
-            options.MaxIter = 75;
+            options.MaxIter = 15;
             options.MaxFunEvals = 100;
             options.TolX = 1e-8;
             % Set the loss function for code optimization

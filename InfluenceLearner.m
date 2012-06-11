@@ -7,15 +7,12 @@ classdef InfluenceLearner < Learner
     %
     % The influence functions in this implementation can be interpreted as
     % estimating a distribution over the relative merits of each sub hypothesis
-    % using multinomial logistic regression.
+    % using multinomial logistic regression (i.e. softmax).
     %
     % Accepted options:
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.loss_func: Loss function handle to a function that can be wrapped
     %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.extend_all: if this is set, all hypotheses will be updated on each
     %                    cycle, in a random order
     %   opts.l_const: constructor handle for base learners
@@ -36,12 +33,6 @@ classdef InfluenceLearner < Learner
         l_count
         % extend_all determines whether to extend all or only best
         extend_all
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end % END PROPERTIES
     
     methods
@@ -79,15 +70,6 @@ classdef InfluenceLearner < Learner
             else
                 self.extend_all = opts.extend_all;
             end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),self.l_count);
-            end
             % Create initial base learners from which the joint hypothesis will
             % be composed.
             opts.l_opts.nu = self.nu;
@@ -121,12 +103,7 @@ classdef InfluenceLearner < Learner
             if ~exist('keep_it','var')
                 keep_it = 1;
             end
-            if (self.opt_train ~= 1)
-                [F Fh] = self.evaluate(X);
-            else
-                Fh = self.Ft;
-                X = self.Xt;
-            end
+            [F Fh] = self.evaluate(X);
             obs_count = size(X,1);
             % Find the learner that, if updated, will most reduce the loss
             L_min = self.sosm_loss(Fh, Y, self.alpha, 1:obs_count);
@@ -146,12 +123,6 @@ classdef InfluenceLearner < Learner
                     Fc, Fh, Yc, l_min, self.alpha, idx);
             self.l_objs{l_min}.loss_func = l_loss;
             L = self.l_objs{l_min}.extend(X, Y, 1);
-            % Evaluate the updated learner
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.l_objs{l_min}.evaluate(self.Xt);
-                self.Ft(:,l_min) = Ft_new;
-            end
             return
         end
         
@@ -332,22 +303,5 @@ classdef InfluenceLearner < Learner
         end
         
     end % END METHODS
-    methods (Static = true)
-        
-        function [ step ] = find_step(F, Fs, step_func)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: loss_func(F + Fs.*step)
-            options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
-                'Display','off');
-            [L dL] = step_func(F);
-            if (sum(Fs.*dL) > 0)
-                step = fminbnd(@( s ) step_func(F + Fs.*s), -1, 0, options);
-            else
-                step = fminbnd(@( s ) step_func(F + Fs.*s), 0, 1, options);
-            end
-            return
-        end
-        
-    end % END METHODS (STATIC)
     
 end % END CLASSDEF

@@ -9,10 +9,7 @@ classdef VecStumpLearner < Learner
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.l_dim: dimension of the vector-valued output for this learner
     %   opts.loss_func: Loss function handle to a function that can be wrapped
-    %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
+    %                   around hypothesis outputs F as @(F)loss_func(F,Y)
     %
     
     properties
@@ -28,12 +25,6 @@ classdef VecStumpLearner < Learner
         l_dim
         % p is a scaling factor contolling "selectivity" of split choice
         p
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end
     
     methods
@@ -58,15 +49,6 @@ classdef VecStumpLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),self.l_dim);
-            end
             self.p = 0.5;
             % TODO: devise and implement a reasonable way of intializing with a
             % "constant" output.
@@ -81,12 +63,7 @@ classdef VecStumpLearner < Learner
                 keep_it = 1;
             end
             % First, evaluate learner and compute loss/gradient
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             [L dLdF] = loss_func(F);
             % Compute a split point based on the computed gradient
             feat_count = size(X,2);
@@ -166,21 +143,12 @@ classdef VecStumpLearner < Learner
             stump.w_l = w_l * self.nu;
             stump.w_r = w_r * self.nu;
             self.stumps{end+1} = stump;
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.evaluate(self.Xt, size(self.stumps,1));
-                self.Ft = self.Ft + Ft_new;
-                F = self.Ft;
-            else
-                F = self.evaluate(X);
-            end
+            % Evaluate the updated classifier and compute loss for it
+            F = self.evaluate(X);
             L = loss_func(F);
             % Undo addition of stump if keep_it ~= 1
             if (keep_it ~= 1)
                 self.stumps = {self.stumps{1:end-1,:}};
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft - Ft_new;
-                end
             end
             return 
         end

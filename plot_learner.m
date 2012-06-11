@@ -37,24 +37,25 @@ scatter(grid_points(grid_y > 0,1), grid_points(grid_y > 0,2),...
         'Marker','.', 'MarkerEdgeColor', [1.0 0.6 0.0], 'SizeData', 16);
 scatter(grid_points(grid_y < 0,1), grid_points(grid_y < 0,2),...
         'Marker','.', 'MarkerEdgeColor', [0.2 0.8 1.0], 'SizeData', 16);
-% Add contour lines describing classifier output
-contour(Xg, Yg, Fg, [0.000001], 'Color', [0.0 0.0 0.0],...
-        'LineStyle', '-', 'LineWidth', 1);
-contour(Xg, Yg, Fg, [-1.0 1.0], 'Color', [0.66 0.66 0.66],...
-        'LineStyle', '-', 'LineWidth', 1);
-
-% Plot the true points
+    
+% Plot the true labeled points
 scatter(X(Y < 0,1), X(Y < 0,2), 'Marker', 'o', 'MarkerEdgeColor', [0.2 0.8 1.0],...
     'LineWidth', 1.0, 'SizeData',32);
 scatter(X(Y > 0,1), X(Y > 0,2), 'Marker', 'o', 'MarkerEdgeColor', [1.0 0.6 0.0],...
     'LineWidth', 1.0, 'SizeData',32);
 
+% Add contour lines describing classifier output
+contour(Xg, Yg, Fg, [-1.0 1.0], 'Color', [0.66 0.66 0.66],...
+        'LineStyle', '-', 'LineWidth', 1);
+contour(Xg, Yg, Fg, [0.000001], 'Color', [0.0 0.0 0.0],...
+        'LineStyle', '-', 'LineWidth', 1);
+
 axis square;
 axis equal;
 
-% % Temporary stuff for surface plotting.
+% Temporary stuff for surface plotting.
 % figure();
-% colormap('jet');
+% colormap('bone');
 % if (abs(min(Fg(:))) > abs(max(Fg(:))))
 %     Fg(Fg < -2*max(Fg(:))) = -2*max(Fg(:));
 % else

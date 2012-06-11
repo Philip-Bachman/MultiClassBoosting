@@ -8,9 +8,6 @@ classdef TreeLearner < Learner
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.loss_func: Loss function handle to a function that can be wrapped
     %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.max_depth: The depth to which each tree will be extended. A max
     %                   depth of 1 corresponds to boosting stumps. All leaves at
     %                   each depth will be split. (i.e. trees are full)
@@ -21,12 +18,6 @@ classdef TreeLearner < Learner
         trees
         % max_depth gives the depth to which each tree will be grown
         max_depth
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end
     
     methods
@@ -45,15 +36,6 @@ classdef TreeLearner < Learner
                 self.loss_func = @loss_bindev;
             else
                 self.loss_func = opts.loss_func;
-            end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),1);
             end
             if ~isfield(opts,'max_depth')
                 self.max_depth = 2;
@@ -78,12 +60,7 @@ classdef TreeLearner < Learner
                 keep_it = 1;
             end
             % First, evaluate learner and compute loss/gradient
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
             % Iteratively split all leaves at each current tree depth, creating
@@ -105,7 +82,8 @@ classdef TreeLearner < Learner
                         % Greedily split this leaf
                         leaf_X = X(leaf_idx,:);
                         leaf_dL = dL(leaf_idx);
-                        [split_f split_t] = TreeLearner.find_split(leaf_X, leaf_dL);
+                        [split_f split_t] = ...
+                            TreeLearner.find_split(leaf_X, leaf_dL);
 
                     else
                         % This leaf contains none of the training samples
@@ -128,11 +106,13 @@ classdef TreeLearner < Learner
                 end
             end
             % Set weight in each leaf of the generated tree
+            Fs = ones(size(F));
             for l_num=1:length(new_leaves),
                 leaf = new_leaves{l_num};
                 if (numel(leaf.sample_idx) > 0)
+                    % Only set weights in leaves that contain samples
                     step_func = @( f ) self.loss_func(f, Y, leaf.sample_idx);
-                    weight = TreeLearner.find_step(F, step_func);
+                    weight = self.find_step(F, Fs, step_func);
                     leaf.weight = weight * self.nu;
                 else
                     leaf.weight = 0;
@@ -141,21 +121,11 @@ classdef TreeLearner < Learner
             % Append the generated tree to the set of trees from which this
             % learner is composed.
             self.trees{end+1} = root;
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.evaluate(self.Xt, length(self.trees));
-                self.Ft = self.Ft + Ft_new;
-                F = self.Ft;
-            else
-                F = self.evaluate(X);
-            end
+            F = self.evaluate(X);
             L = self.loss_func(F, Y, 1:obs_count);
             % Undo addition of stump if keep_it ~= 1
             if (keep_it ~= 1)
                 self.trees = {self.trees{1:end-1}};
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft - Ft_new;
-                end
             end
             return 
         end
@@ -187,19 +157,6 @@ classdef TreeLearner < Learner
         end
     end
     methods (Static = true)
-        function [ step ] = find_step(F, step_func)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: loss_func(F + Fs.*step)
-            options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
-                'Display','off');
-            [L dL] = step_func(F);
-            if (sum(dL) > 0)
-                step = fminbnd(@( s ) step_func(F + s), -1, 0, options);
-            else
-                step = fminbnd(@( s ) step_func(F + s), 0, 1, options);
-            end
-            return
-        end
         
         function [best_feat best_thresh] = find_split(X, dL)
             % Compute a split of the given set of values that maximizes the

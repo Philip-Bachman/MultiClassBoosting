@@ -1,11 +1,10 @@
 % test image segmentation data from statlib/UCI repository
 clear;
 warning off all;
-load('segment.mat');
+load('datasets/segment.mat');
 
 mc_opts = struct();
-mc_opts.nu = 1.0;
-mc_opts.do_opt = 0;
+mc_opts.nu = 0.25;
 mc_opts.loss_func = @loss_bindev;
 mc_opts.l_dim = 10;
 mc_opts.l_const = @VecStumpLearner;
@@ -26,7 +25,7 @@ for t=1:3,
         fprintf('META ROUND %d...\n',r);
         mcl_1.lrnr.p = 2.0;
         for i=1:20,
-            tidx = randsample(size(X_train,1),round(size(X_train,1)/2.0));
+            tidx = randsample(size(X_train,1),round(size(X_train,1)*0.66));
             L = mcl_1.extend(X_train(tidx,:),Y_train(tidx));
             [F H Cf] = mcl_1.evaluate(X_train);
             a_train = sum(Y_train==Cf) / numel(Y_train);

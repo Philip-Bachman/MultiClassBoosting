@@ -1,0 +1,925 @@
+%-- 12-02-22 11:38:20 PM --%
+test_bci_matrix();
+clc
+test_bci_matrix();
+clc
+test_bci_matrix();
+r
+clc
+test_bci_matrix();
+mean(Y_pred_thr)
+min(Y_pred_thr)
+max(Y_pred_thr)
+hist(Y_pred_thr)
+sum(B_test_tr_labels)
+Y_pred_thr(B_test_tr_idx(t,sum_range))
+mean(Y_pred_thr(B_test_tr_idx(t,sum_range)))
+for t=1:numel(B_test_tr_labels), idx = B_test_tr_idx(t,sum_range); display(mean(idx)); tr_sum = mean(Y_pred_thr(idx)); Y_pred_thresh(t) = tr_sum; end
+clc
+B_test_tr_idx(1,1:20)
+B_test_tr_idx(2,1:20)
+B_test_tr_idx(3,1:20)
+clc
+test_bci_matrix();
+clc
+stem(Y_pred_thresh .* B_test_labels)
+stem(Y_pred_thresh .* B_test_tr_labels)
+r
+figure();
+hold on;
+plot(C1_cumsums(1,:),'b-');
+plot(C1_cumsums(2,:),'r-');
+stem(Y_pred_thresh .* B_test_tr_labels)
+clc
+test_bci_matrix();
+figure();
+hold on;
+plot(C1_cumsums(1,:),'b-');
+plot(C1_cumsums(2,:),'r-');
+clc
+clear
+test_bci_matrix();
+clc
+test_bci_matrix();
+clear
+clc
+clear
+save('csum_figure_data.mat');
+%-- 12-03-13 06:44:30 PM --%
+X_train = optdigits_train(:,1:64);
+Y_train = optdigits_train(:,65);
+X_test = optdigits_test(:,1:64);
+Y_test = optdigits_test(:,65);
+save('optdigits.mat');
+test_optdigits();
+clc
+test_optdigits();
+clc
+test_optdigits();
+clc
+iamgesc(mc_learner.c_codes); colorbar();
+imagesc(mc_learner.c_codes); colorbar();
+clc
+test_optdigits();
+clc
+test_optdigits();
+clc
+imagesc(mc_learner.c_codes); colorbar();
+test_optdigits();
+clc
+test_optdigits();
+clcl
+clc
+clear
+X_train = pendigits_train(:,1:16);
+Y_train = pendigits_train(:,17);
+X_test = pendigits_test(:,1:16);
+Y_test = pendigits_test(:,17);
+save('pendigits.mat');
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+clc
+test_pendigits();
+whos
+t
+test_accs(1:10)
+mean(test_accs(1:10)
+mean(test_accs(1:10))
+clc
+test_pendigits();
+`clc
+clc
+test_pendigits();
+clc
+test_pendigits();
+sqrt(sum(mc_learner.c_codes.^2,2))
+clc
+plot(mean(cumprod(randn(100,1000).*(0.03*15))))
+plot(mean((cumprod(randn(100,1000).*0.03)).*15))
+errorbar(mean((cumprod(randn(100,1000).*0.03)).*15), std((cumprod(randn(100,1000).*0.03)).*15));
+clc
+clear
+test_pendigits();
+clc
+test_pendigits();
+r
+t
+mean(test_accs(1:15))
+%-- 12-05-11 12:00:12 AM --%
+test_mnist();
+clc
+test_mnist();
+%-- 12-05-11 12:56:27 AM --%
+path
+clc
+test_mnist();
+clear
+clc
+test_mnist();
+clc
+test_mnist();
+train
+svmtrain
+path
+clc
+path
+minFunc
+clc
+train
+make
+clc
+train
+% Test simple SVM on both feature types, and also on union of feature types
+Xt_cov = sparse(ZMUV(Xt_cov));
+Xt_omp = sparse(ZMUV(Xt_omp));
+fprintf('==================================================\n');
+fprintf('Testing COV features:\n');
+train(Yt,Xt_cov,'-s 4 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing OMP features:\n');
+train(Yt,Xt_omp,'-s 4 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing JOINT features:\n');
+train(Yt,[Xt_cov Xt_omp],'-s 4 -v 5');
+clc
+% Test simple SVM on both feature types, and also on union of feature types
+Xt_cov = sparse(ZMUV(Xt_cov));
+Xt_omp = sparse(ZMUV(Xt_omp));
+fprintf('==================================================\n');
+fprintf('Testing COV features:\n');
+train(Yt,Xt_cov,'-s 4 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing OMP features:\n');
+train(Yt,Xt_omp,'-s 4 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing JOINT features:\n');
+train(Yt,[Xt_cov Xt_omp],'-s 4 -v 5');
+%-- 12-05-11 08:58:22 PM --%
+make
+clc
+memory
+clear
+clc
+% Test simple SVM on both feature types, and also on union of feature types
+Xt_cov = sparse(ZMUV(Xt_cov));
+Xt_omp = sparse(ZMUV(Xt_omp));
+fprintf('==================================================\n');
+fprintf('Testing COV features:\n');
+train(Yt,Xt_cov,'-s 1 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing OMP features:\n');
+train(Yt,Xt_omp,'-s 1 -v 5');
+clc
+% Test simple SVM on both feature types, and also on union of feature types
+Xt_cov = sparse(ZMUV(Xt_cov));
+Xt_omp = sparse(ZMUV(Xt_omp));
+fprintf('==================================================\n');
+fprintf('Testing COV features:\n');
+train(Yt,Xt_cov,'-s 1 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing OMP features:\n');
+train(Yt,Xt_omp,'-s 1 -v 5');
+%-- 12-05-11 09:24:18 PM --%
+pathdef()
+path
+clc
+clear
+pathdef();
+path
+clc
+clear
+% Test simple SVM on both feature types, and also on union of feature types
+Xt_cov = sparse(ZMUV(Xt_cov));
+Xt_omp = sparse(ZMUV(Xt_omp));
+fprintf('==================================================\n');
+fprintf('Testing COV features:\n');
+train(Yt,Xt_cov,'-s 2 -v 5');
+fprintf('==================================================\n');
+fprintf('Testing OMP features:\n');
+train(Yt,Xt_omp,'-s 2 -v 5');
+%-- 12-05-11 10:17:57 PM --%
+pathdef();
+clear
+test_mnist();
+clc
+clear
+test_mnist();
+clear
+clc
+test_mnist();
+pause on;
+for i=1:512, show_patch(A_omp(:,i)',8,8); pause; end;
+save('mnist_compact_feats.mat');
+%-- 12-05-13 07:02:48 PM --%
+test_mnist();
+cd ..
+pathdef();
+cd CovCoding/
+ls
+clc
+clear
+test_mnist();
+save('mnist_covcode.mat');
+test_covcode();
+clear
+clc
+load('mnist_covcode.mat');
+model = train(Yt, Xt_cov, '-s 4');
+predict
+predict(Yt,Xt_cov,model);
+train(Yt, Xt_cov, '-s 4 -v 10');
+1.6 * 125
+1.6 * 109
+clc
+test_covcode();
+clc
+clear
+test_covcode();
+X_all = [X_test; X_train];
+Y_all = [Y_test; Y_train];
+clc
+train
+train(Y_all, X_all, '-s 4 -v 10');
+%-- 12-05-14 10:42:25 PM --%
+cd ..
+pathdef();
+ls
+test_cifar();
+clear
+clc
+test_cifar();
+whos
+clc
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_cov, Yt, 5, 0.2, 1.0 );
+clc
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_cov, Yt, 5, 0.2, 100.0 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_omp, Yt, 5, 0.2, 100.0 );
+clc
+clear
+%-- 12-05-15 11:55:25 PM --%
+test_cifar();
+cd ...
+;
+cd ..
+ls
+pathdef();
+test_cifar();
+cd CovCoding/
+ls
+test_cifar();\
+test_cifar();
+Xt_cov = ZMUV(Xt_cov);
+Xt_omp = ZMUV(Xt_omp);
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_omp, Yt, 5, 0.2, 1.0 );
+clc
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_omp, Yt, 5, 0.2, 10.0 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_cov, Yt, 5, 0.2, 10.0 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate(Xt_cov, Yt, 5, 0.2, 1.0 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 5, 0.2, 0.25 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 5, 0.2, 1.0 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 5, 0.1, 1.0 );
+clc
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 5, 0.1, 0.75 );
+clc
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 10, 0.1, 0.66 );
+clc
+clc[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 10, 0.1, 0.5 );
+[ opt_theta acc_tr acc_te svm_eval ] = svm_cross_validate([Xt_omp Xt_cov], Yt, 10, 0.1, 0.5 );
+%-- 12-05-16 04:45:14 PM --%
+test_cifar();
+cd ..
+pathdef();
+test_cifar();
+clc
+test_cifar();
+%-- 12-05-23 10:38:09 PM --%
+test_converge_thm();
+clear
+clc
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+test_boost_err = test_boost_err(:,1:19,:);
+test_boost_loss = test_boost_loss(:,1:19,:);
+test_chain_loss = test_chain_loss(:,1:19,:);
+test_chain_err = test_chain_err(:,1:19,:);
+% Draw loss convergence figure
+loss_fig = figure();
+plot_train_loss(mean_boost_loss');
+hgsave(loss_fig, 'converge_thm_loss.fig');
+% Draw error convergence figure
+err_fig = figure();
+plot_test_error(mean_boost_err');
+hgsave(loss_fig, 'converge_thm_error.fig');
+mean_boost_loss = squeeze(mean(test_boost_loss,2));
+mean_boost_err = squeeze(mean(test_boost_err,2));
+% Draw loss convergence figure
+loss_fig = figure();
+plot_train_loss(mean_boost_loss');
+hgsave(loss_fig, 'converge_thm_loss.fig');
+% Draw error convergence figure
+err_fig = figure();
+plot_test_error(mean_boost_err');
+hgsave(loss_fig, 'converge_thm_error.fig');
+mean_chain_err = squeeze(mean(test_chain_err,2));
+mean_joint_err = [mean_boost_err(4:6,:); mean_chain_err(4:6,:)];
+plot_test_error(mean_joint_err');
+clc
+clear
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+clear
+clc
+test_converge_thm();
+clc
+test_converge_thm();
+lrnr
+lrnr.stumps(1:10,:)
+lrnr.Ft(1:20)
+lrnr.Yt
+clc
+lrnr.Ft(1:20)
+lrnr.Yt(1:20)
+clc
+clear
+test_converge_thm();
+clear
+clc
+test_converge_thm();
+clear
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+test_converge_thm();
+plot(squeeze(test_chain_err(1,1,:)))
+hold on; plot(squeeze(test_stump_err(1,1,:)),'r-')
+hold on; plot(squeeze(test_boost_err(1,1,:)),'r-')
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+% Draw comparison of stumps vs. stump chains
+joint_fig = plot_joint_error(mean_joint_err');
+hgsave(joint_fig, 'converge_thm_joint.fig');
+close(joint_fig)
+clc
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+test_converge_thm();
+clc
+clear
+test_converge_thm();
+%-- 12-05-28 07:26:13 PM --%
+trainImageNames{1:20}
+trainImageClasses(1:20)
+stem(trainImageClasses)
+mean_kernel = zeros(4590,4590);
+figure(); hist(matrix(:),31);
+max(matrix(:))
+geomean_train = zeros(4590,4590);
+mean_train = zeros(4590,4590);
+geomean_test = zeros(4590,1355);
+mean_test = zeros(4590,1355);
+geomean_test = ones(4590,1355);
+geomean_train = ones(4590,4590);
+geomean_train = geomean_train .* matrix;
+mean_train = mean_train + matrix;
+geomean_train = geomean_train .* matrix; mean_train = mean_train + matrix;
+pathdef();
+train
+svmtrain\
+svmtrain
+train
+train(trainImageClasses,sparse(mean_train),'-s 4 -v 5');
+train(trainImageClasses',sparse(mean_train),'-s 4 -v 5');
+%-- 12-05-28 08:19:45 PM --%
+mean_train = zeros(4590,4590);
+geomean_train = zeros(4590,4590);
+geomean_train = ones(4590,4590);
+geomean_test = ones(4590,1355);
+mean_test = zeros(4590,1355);
+geomean_train = geomean_train .* matrix; mean_train = mean_train + matrix;
+train
+pathdef();
+train
+train(trainImageClasses',sparse(mean_train),'-s 4 -e 1.0 -v 5','col');
+%-- 12-05-28 08:30:37 PM --%
+train(trainImageClasses',sparse(matrix),'-s 4 -e 100.0 -v 3','col');
+pathdef();
+train(trainImageClasses',sparse(matrix),'-s 4 -e 100.0 -v 3','col');
+train(trainImageClasses',sparse(matrix),'-s 4 -e 10.0 -v 3','col');
+train(trainImageClasses',sparse(matrix),'-s 4 -e 1.0 -v 1','col');
+train(trainImageClasses',sparse(matrix),'-s 4 -e 1.0 -v 2','col');
+%-- 12-05-28 08:35:13 PM --%
+pathdef();
+X_train = matrix';
+Y_train = trainImageClasses';
+test_caltech101();
+clc
+clear
+X_train = matrix';
+Y_train = trainImageClasses';
+save('caltech101.mat');
+17*80
+trainImageClasses(1:10)
+trainImageNames{1:10}
+trainImageNames{1:100}
+clc
+testImageNames{1:1000}
+clc
+hist(matrix(:),31)
+clc
+mean_train = zeros(4590,4590);
+mean_test = zeros(4590,1355);
+geomean_train = ones(4590,4590);
+geomean_test = ones(4590,1355);
+geomean_train = geomean_train .* matrix; mean_train = mean_train + matrix;
+ls
+help ls
+clear
+clc
+compute_mean_feats();
+save('caltech101_mean_feats.mat');
+image_names = {trainImageNames{:}, testImageNames{:}};
+image_names{1:5}
+image_classes = [trainImageClasses(:), testImageClasses(:)];
+image_classes = [trainImageClasses, testImageClasses];
+X_mean = [geomean_train'; geomean_test'];
+X_geomean = [geomean_train'; geomean_test'];
+X_mean = [mean_train'; mean_test'];
+X_geomean = [geomean_train'; geomean_test'];
+Y = image_classes';
+sum(Y == 1)
+60 * 102
+one_idx = Y == 1;
+train_ones = Y(1:4590) == 1;
+X_geomean(:,train_ones) = [];
+X_mean(:,train_ones) = [];
+X_mean(one_idx,:) = [];
+X_geomean(one_idx,:) = [];
+Y(one_idx) = [];
+image_classes = image_classes(~one_idx);
+image_names = image_name(~one_idx);
+image_names = image_names(~one_idx);
+save('caltech101_mean_compact.mat');
+clear
+clc
+load('caltech101_mean_compact.mat');
+whos
+hist(X_mean(:),31)
+hist(X_geomean(:),31)
+compute_mean_feats();
+clear
+clc
+imagesc(X_mean)
+colorbar();
+X_mean = X_mean ./ max(X_mean(:));
+save('caltech101_mean_compact.mat');
+clear
+test_caltech101();
+clc
+clear
+load('test_caltech_res.mat');
+cv_accs
+clear
+load('test_caltech_res.mat');
+whos
+%-- 12-05-29 10:21:52 PM --%
+load('test_caltech_res.mat');
+whos
+cd ..
+pathdef();
+cd MultiClassBoosting/
+ls
+mc_learners{1}
+mc_learners{1}.c_codes
+clc
+c_codes = zeros(101,15);
+mc_learner
+for i=1:10, c_codes = c_codes + mc_learners{i}.c_codes; end;
+imagesc(c_codes)
+imagesc(c_codes * c_codes' - diag(diag(c_codes*c_codes'))); colorbar();
+pdist
+help pdist
+code_dist_euclid = pdist(c_codes,'euclidean');
+code_dist_cosine = pdist(c_codes,'cosine');
+code_dist_euclid = zeros(size(code_dist_euclid));
+code_dist_cosine = zeros(size(code_dist_cosine));
+for i=1:10, code_dist_euclid = code_dist_euclid + pdist(mc_learners{i}.c_codes,'euclidean'); end;
+for i=1:10, code_dist_cosine = code_dist_cosine + pdist(mc_learners{i}.c_codes,'cosine'); end;
+figure(); dendrogram(linkage(code_dist_euclid));
+A = squareform(code_dist_euclid);
+iamgesc(A); colorbar();
+imagesc(A); colorbar();
+imagesc(A./10); colorbar();
+imagesc(squareform(code_dist_cosine)./10); colorbar();
+Z = linkage(mc_learner.c_codes,'ward','euclidean');
+figure(); dendrogram(Z);
+figure(); dendrogram(Z,0);
+figure(); dendrogram(linkage(code_dist_euclid,'ward'));
+figure(); dendrogram(linkage(code_dist_euclid));
+figure(); dendrogram(linkage(code_dist_euclid,'average'));
+figure(); dendrogram(linkage(code_dist_euclid,'average'),0);
+figure(); dendrogram(linkage(code_dist_euclid,'ward'),0);
+mc_learner
+mc_learner.c_labels
+image_name{image_classes==57}
+image_names{image_classes==57}
+image_names{image_classes==81}
+clc
+kmeans
+help kmeans
+[IDX, C, SUMD] = kmeans(mc_learner.c_codes, 5);
+IDX(1:20)
+class_names = {}
+for i=2:102, im_names = image_names(image_classes==i); class_names{i} = im_names{1}; end;
+im_names
+clc
+class_names
+class_names{2}
+clc
+for i=2:102, im_names = image_names(image_classes==i); class_names{i} = im_names{1}; display(im_names{1:3}); end;
+for i=2:102, im_names = image_names(image_classes==i); class_names{i} = im_names{1}; display(im_names{1}); display(im_names{2}); end;
+figure(); dendrogram(linkage(code_dist_euclid,'ward'),0);
+class_names{57}
+class_names{81}
+class_names{2}
+class_names{3}
+class_names{10}
+class_names{13}
+class_names{6}
+class_names{71}
+class_names{94}
+class_names{67}
+figure(); dendrogram(linkage(code_dist_euclid,'average'),0);
+clc
+IDX(1:20)
+class_names{find(IDX==1)+1}
+clc
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+clc
+[IDX, C, SUMD] = kmeans(mc_learner.c_codes, 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+clc
+[IDX, C, SUMD] = kmeans(mc_learners{1}.c_codes, 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+2^9
+10 / 512
+class_names{find(IDX==9)+1}
+1 / 2^9
+class_names{find(IDX==10)+1}
+plot(cumsum(svd(code_dist_euclid)))
+svd(code_dist_euclid)
+help svd
+plot(cumsum(svd(squareform(code_dist_euclid))))
+plot(cumsum(svd(squareform(code_dist_cosine))))
+[U S V] = svd(code_dist_cosine);
+help princomp
+[COEFF SCORE LATENT] = princomp(code_dist_euclid);
+plot(cumsum(latent))
+plot(cumsum(LATENT))
+code_dist_euclid = squareform(code_dist_euclid);
+code_dist_cosine = squareform(code_dist_cosine);
+[COEFF SCORE LATENT] = princomp(code_dist_euclid);
+plot(cumsum(LATENT))
+[COEFF SCORE LATENT] = princomp(code_dist_cosine);
+plot(cumsum(LATENT))
+[IDX, C, SUMD] = kmeans(SCORE(:,1:20), 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:10), 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+clc
+[COEFF SCORE LATENT] = princomp(code_dist_euclid);
+[IDX, C, SUMD] = kmeans(SCORE(:,1:20), 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:15), 15);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+class_names{find(IDX==11)+1}
+class_names{find(IDX==12)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:20), 15);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+1 / 2^11
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+class_names{find(IDX==11)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:20), 20);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+class_names{find(IDX==11)+1}
+class_names{find(IDX==12)+1}
+class_names{find(IDX==13)+1}
+class_names{find(IDX==14)+1}
+class_names{find(IDX==115)+1}
+class_names{find(IDX==15)+1}
+class_names{find(IDX==16)+1}
+class_names{find(IDX==17)+1}
+class_names{find(IDX==18)+1}
+class_names{find(IDX==19)+1}
+class_names{find(IDX==20)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:20), 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:10), 10);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+[IDX, C, SUMD] = kmeans(SCORE(:,1:10), 15);
+class_names{find(IDX==1)+1}
+class_names{find(IDX==2)+1}
+class_names{find(IDX==3)+1}
+class_names{find(IDX==4)+1}
+class_names{find(IDX==5)+1}
+class_names{find(IDX==6)+1}
+class_names{find(IDX==7)+1}
+class_names{find(IDX==8)+1}
+class_names{find(IDX==9)+1}
+class_names{find(IDX==10)+1}
+class_names{find(IDX==11)+1}
+class_names{find(IDX==12)+1}
+clc
+[IDX, C, SUMD] = kmeans(SCORE(:,1:10), 15);
+for i=1:15, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc
+k = 10; [IDX, C, SUMD] = kmeans(SCORE(:,1:10), k); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [IDX, C, SUMD] = kmeans(SCORE(:,1:10), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc
+k = 10; [IDX, C, SUMD] = kmeans(SCORE(:,1:10), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 15; [IDX, C, SUMD] = kmeans(SCORE(:,1:15), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 15; [IDX, C, SUMD] = kmeans(SCORE(:,1:20), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc
+clc; k = 20; [IDX, C, SUMD] = kmeans(SCORE(:,1:20), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+[ W ] = SimGraph( code_dist_euclid, 3, 10 );
+[ C, L, U ] = SpectralClustering( W, 15, 3 );
+[ C, L, U ] = SpectralClustering( W, 10, 3 );
+iamgesc(C)
+imagesc(C)
+IDX = max(C,[],2);
+[ W ] = SimGraph( code_dist_euclid, 3, 10 ); [ C, L, U ] = SpectralClustering( W, 10, 3 ); IDX = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+[ W ] = SimGraph( code_dist_euclid, 3, 20 ); [ C, L, U ] = SpectralClustering( W, 10, 3 ); IDX = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+imagesc(code_dist_euclid)
+[ W ] = SimGraph( code_dist_euclid, 3, 30 ); [ C, L, U ] = SpectralClustering( W, 10, 3 ); IDX = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+imagesc(W)
+[ W ] = SimGraph( code_dist_euclid, 3, 30 ); [ C, L, U ] = SpectralClustering( W, 10, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 15; [ W ] = SimGraph( code_dist_euclid, 3, 30 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [ W ] = SimGraph( code_dist_euclid, 3, 30 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [ W ] = SimGraph( code_dist_euclid, 3, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [ W ] = SimGraph( code_dist_euclid, 1, 20, std2(code_dist_euclid) ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [ W ] = SimGraph( SCORE(:,1:20), 1, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 5; [ W ] = SimGraph( SCORE(:,1:20), 1, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 5; [ W ] = SimGraph( SCORE(:,1:20)', 1, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 15; [ W ] = SimGraph( SCORE(:,1:20)', 1, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+k = 10; [ W ] = SimGraph( SCORE(:,1:20)', 1, 20 ); [ C, L, U ] = SpectralClustering( W, k, 3 ); [IXX IDX] = max(C,[],2); for i=1:k, c_names = class_names(find(IDX==i)); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc
+clc; k = 15; [IDX, C, SUMD] = kmeans(SCORE(:,1:5), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 15; [IDX, C, SUMD] = kmeans(SCORE(:,1:20), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 10; [IDX, C, SUMD] = kmeans(SCORE(:,1:20), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 20; [IDX, C, SUMD] = kmeans(SCORE(:,1:20), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 20; [IDX, C, SUMD] = kmeans(SCORE(:,1:16), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 20; [IDX, C, SUMD] = kmeans(SCORE(:,1:25), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc; k = 20; [IDX, C, SUMD] = kmeans(SCORE(:,1:15), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+coclust_counts = zeros(101,101); for i=1:20, [IDX, C, SUMD] = kmeans(SCORE(:,1:15), 15); for j=1:101, coclust_counts(j,IDX == IDX(j)) = coclust_counts(j,IDX == IDX(j)) + 1; end; end;
+imagesc(coclust_counts); colorbar();
+coclust_counts = zeros(101,101); for i=1:20, [IDX, C, SUMD] = kmeans(SCORE(:,1:15), 15); for j=1:101, coclust_counts(j,IDX == IDX(j)) = coclust_counts(j,IDX == IDX(j)) + 1; end; end; coclust_counts = coclust_counts - diag(diag(coclust_counts));
+imagesc(coclust_counts); colorbar();
+find(coclust_counts == 20)
+numel(find(coclust_counts == 20)) / 2
+for i=1:101, cocs = find(coclust_counts(i,:) == 20); for j=1:numel(cocs), fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end;
+for i=1:101, cocs = find(coclust_counts(i,:) > 18); for j=1:numel(cocs), fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end;
+clc
+for i=1:101, cocs = find(coclust_counts(i,:) >= 15); for j=1:numel(cocs), fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end;
+clc
+for i=1:101, cocs = find(coclust_counts(i,:) >= 15); for j=1:numel(cocs), if (i < cocs(j)) fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end; end;
+clc; for i=1:101, cocs = find(coclust_counts(i,:) >= 18); for j=1:numel(cocs), if (i < cocs(j)) fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end; end;
+clc; for i=1:101, cocs = find(coclust_counts(i,:) >= 19); for j=1:numel(cocs), if (i < cocs(j)) fprintf('%s <-> %s\n',class_names{i+1},class_names{cocs(j)+1}); end; end; end;
+binopdf(6,60,0.5)
+binopdf(6,54,0.5)
+binopdf(6,55,0.5)
+binopdf(54,60,0.5)
+binopdf(54,60,0.75)
+binopdf(54,60,0.4
+binopdf(54,60,0.4)
+clc; k = 15; [IDX, C, SUMD] = kmeans(SCORE(:,1:15), k); for i=1:k, c_names = class_names(find(IDX==i)+1); fprintf('CLASS %d:\n',i); for j=1:numel(c_names), fprintf('    %s\n',c_names{j}); end; end;
+clc
+imagesc(coclust_counts)
+coclust_vec = squareform(coclust_counts);
+coclust_vec = 20 - coclust_vec;
+imagesc(squareform(coclust_vec))
+[H,T] = dendrogram(linkage(coclust_vec));
+[H,T] = dendrogram(linkage(coclust_vec),'weighted');
+[H,T] = dendrogram(linkage(coclust_vec,'weighted'));
+[H,T] = dendrogram(linkage(coclust_vec,'average'));
+[H,T] = dendrogram(linkage(coclust_vec,'ward'));
+[H,T] = dendrogram(linkage(coclust_vec,'average'));
+class_names{find(T==26)+1}
+class_names{find(T==28)+1}
+class_names{find(T==4)+1}
+class_names{find(T==8)+1}
+class_names{find(T==17)+1}
+class_names{find(T==29)+1}
+class_names{find(T==25)+1}
+class_names{find(T==18)+1}
+class_names{find(T==1)+1}
+class_names{find(T==12)+1}
+class_names{find(T==22)+1}
+class_names{find(T==6)+1}
+class_names{find(T==9)+1}
+class_names{find(T==14)+1}
+class_names{find(T==20)+1}
+class_names{find(T==10)+1}
+class_names{find(T==27)+1}
+class_names{find(T==7)+1}
+class_names{find(T==30)+1}
+coclust_counts = zeros(101,101); for i=1:50, [IDX, C, SUMD] = kmeans(SCORE(:,1:15), 20); for j=1:101, coclust_counts(j,IDX == IDX(j)) = coclust_counts(j,IDX == IDX(j)) + 1; end; end; coclust_counts = coclust_counts - diag(diag(coclust_counts));
+coclust_vec = squareform(50 - coclust_counts);
+coclust_vec = squareform((50 - coclust_counts) - (50 * eye(101)));
+[H,T] = dendrogram(linkage(coclust_vec,'average'));
+class_names{find(T==11)+1}
+class_names{find(T==13)+1}
+class_names{find(T==19)+1}
+class_names{find(T==29)+1}
+class_names{find(T==7)+1}
+class_names{find(T==22)+1}
+[H,T] = dendrogram(linkage(coclust_vec,'average'),20);
+class_names{find(T==5)+1}
+class_names{find(T==6)+1}
+class_names{find(T==16)+1}
+[H,T] = dendrogram(linkage(coclust_vec,'average'),10);
+[H,T] = dendrogram(linkage(coclust_vec,'average'),15);
+class_names{find(T==1)+1}
+class_names{find(T==9)+1}
+class_names{find(T==4)+1}
+class_names{find(T==3)+1}
+class_names{find(T==10)+1}
+class_names{find(T==12)+1}
+class_names{find(T==13)+1}
+class_names{find(T==11)+1}
+[H,T] = dendrogram(linkage(coclust_vec,'weighted'),15);
+class_names{find(T==1)+1}
+class_names{find(T==9)+1}
+class_names{find(T==4)+1}
+class_names{find(T==6)+1}
+class_names{find(T==14)+1}
+class_names{find(T==3)+1}
+class_names{find(T==7)+1}
+class_names{find(T==8)+1}
+class_names{find(T==11)+1}
+class_names{find(T==15)+1}
+class_names{find(T==10)+1}
+class_names{find(T==12)+1}
+class_names{find(T==13)+1}
+[H,T] = dendrogram(linkage(coclust_vec),15);
+class_names{find(T==9)+1}
+class_names{find(T==6)+1}
+[H,T] = dendrogram(linkage(coclust_vec),15,'colorthreshold','default');
+Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',0.25*max(Z(:,3)));
+Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',0.5*max(Z(:,3)));
+Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',0.75*max(Z(:,3)));
+Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',0.9*max(Z(:,3)));
+Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',0.59*max(Z(:,3)));
+pause on; for i=0.1:0.1:1.0, Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); pause; end;
+pause on; for i=0.1:0.05:1.0, Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); pause; end;
+class_names{find(T==7)+1}
+class_names{find(T==15)+1}
+class_names{find(T==8)+1}
+class_names{find(T==4)+1}
+class_names{find(T==13)+1}
+clc
+pause on; for i=0.1:0.1:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); title(sprintf('thresh=%.4f',i)); pause; end;
+pause on; for i=0.1:0.05:1.0, Z = linkage(coclust_vec); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); pause; end;
+pause on; for i=0.25:0.05:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); title(sprintf('thresh=%.4f',i)); pause; end;
+pause on; for i=0.75:0.01:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); title(sprintf('thresh=%.4f',i)); pause; end;
+pause on; for i=0.8:0.01:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); title(sprintf('thresh=%.4f',i)); set(H,'linewidth',2); pause; end;
+pause on; for i=0.9:0.01:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3)),'orientation','left'); title(sprintf('thresh=%.4f',i)); set(H,'linewidth',2); pause; end;
+pause on; for i=0.9:0.01:1.0, Z = linkage(coclust_vec,'average'); [H,T] = dendrogram(Z,15,'colorthreshold',i*max(Z(:,3))); title(sprintf('thresh=%.4f',i)); set(H,'linewidth',2); pause; end;
+class_names{find(T==1)+1}
+class_names{find(T==9)+1}
+class_names{find(T==4)+1}
+class_names{find(T==3)+1}
+class_names{find(T==7)+1}
+class_names{find(T==6)+1}
+class_names{find(T==14)+1}
+class_names{find(T==8)+1}
+class_names{find(T==15)+1}
+class_names{find(T==10)+1}
+class_names{find(T==12)+1}
+cd caltech_results

@@ -10,9 +10,6 @@ classdef SparseLearner < Learner
     %   opts.nu: shrinkage/regularization term for boosting
     %   opts.loss_func: Loss function handle to a function that can be wrapped
     %                   around hypothesis outputs F as @(F)loss_func(F,Y).
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.nz_count: Number of non-zero coefficients to produce in each
     %                  elastic-net logistic regression.
     %
@@ -26,12 +23,6 @@ classdef SparseLearner < Learner
         weights
         % nz_count determines the number of non-zeros each set of coefficients
         nz_count
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
     end
     
     methods
@@ -51,15 +42,6 @@ classdef SparseLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),1);
-            end
             if ~isfield(opts,'nz_count')
                 self.nz_count = round(size(X,2)/2);
             else
@@ -67,8 +49,9 @@ classdef SparseLearner < Learner
             end
             % Compute a constant step to apply to all observations
             F = zeros(size(X,1),1);
+            Fs = ones(size(F));
             step_func = @( f ) self.loss_func(f, Y, 1:size(Y,1));
-            [ s ] = SparseLearner.find_step(F, step_func);
+            [ s ] = self.find_step(F, Fs, step_func);
             self.coeffs = zeros(1,size(X,2)+1);
             self.weights = [s s];
             return
@@ -80,41 +63,27 @@ classdef SparseLearner < Learner
             if ~exist('keep_it','var')
                 keep_it = 1;
             end
-            if (self.opt_train ~= 1)
-                F = self.evaluate(X);
-            else
-                F = self.Ft;
-                X = self.Xt;
-            end
+            F = self.evaluate(X);
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
             % Do a sparsifying regression to find a good set of coefficients
             w = SparseLearner.do_reg(X, dL, self.nz_count);
             % For the best splitting regression, compute left and right weights
             X = [X ones(size(X,1),1)];
+            Fs = ones(size(F));
             step_func = @( f ) self.loss_func(f, Y, find(X*w <= 0));
-            w_l = SparseLearner.find_step(F, step_func);
+            w_l = self.find_step(F, Fs, step_func);
             step_func = @( f ) self.loss_func(f, Y, find(X*w > 0));
-            w_r = SparseLearner.find_step(F, step_func);
+            w_r = self.find_step(F, Fs, step_func);
             % Append the best split found as a new (reweighted) regression
             self.coeffs = [self.coeffs; w'];
             self.weights = [self.weights; w_l w_r]; 
-            if (self.opt_train == 1)
-                % Use fast training optimization via incremental evaluation
-                Ft_new = self.evaluate(self.Xt, size(self.coeffs,1));
-                self.Ft = self.Ft + Ft_new;
-                F = self.Ft;
-            else
-                F = self.evaluate(X(:,1:end-1));
-            end
+            F = self.evaluate(X(:,1:end-1));
             L = self.loss_func(F, Y, 1:obs_count);
             % Undo addition of regression if keep_it ~= 1
             if (keep_it ~= 1)
                 self.coeffs = self.coeffs(1:end-1,:);
                 self.weights = self.weights(1:end-1,:);
-                if (self.opt_train == 1)
-                    self.Ft = self.Ft - Ft_new;
-                end
             end
             return 
         end
@@ -150,19 +119,6 @@ classdef SparseLearner < Learner
         end       
     end
     methods (Static = true)
-        function [ step ] = find_step(F, step_func)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: step_func(F + step)
-            options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
-                'Display','off');
-            [L dL] = step_func(F);
-            if (sum(dL) > 0)
-                step = fminbnd(@( s ) step_func(F + s), -1, 0, options);
-            else
-                step = fminbnd(@( s ) step_func(F + s), 0, 1, options);
-            end
-            return
-        end
         
         function [ w ] = do_reg( X, Y, nz_count )
             % Compute a sparsifying elastic-net logistic regression, followed by
@@ -178,8 +134,8 @@ classdef SparseLearner < Learner
             %   w: the weights of the regression (obs_dim(+1) x 1)
             %
             glm_opts = glmnetSet();
-            glm_opts.dfmax = ceil(3.0 * nz_count);
-            glm_opts.alpha = 0.75;
+            glm_opts.dfmax = ceil(4.0 * nz_count);
+            glm_opts.alpha = 0.8;
             glm_opts.nlambda = 300;
             glm_opts.thresh = 1e-3;
             % Decompose the target gradients into "classes" and "weights" for the lr
@@ -219,7 +175,7 @@ classdef SparseLearner < Learner
             nz_idx = find(best_coeffs);
             Xnz = [X(:,nz_idx) ones(size(X,1),1)];
             wi = [best_coeffs(nz_idx); best_bias];
-            funObj = @( b ) SparseLearner.l2_hyptan(b, Xnz, Y, 1e-3, 0);
+            funObj = @( b ) SparseLearner.l2_hyptan(b, Xnz, Y, 1e-2, 0);
             wi = minFunc(funObj, wi, mf_opts);
             % Reload best coefficients and bias using tweaked values
             w = zeros(numel(best_coeffs)+1,1);
@@ -248,7 +204,6 @@ classdef SparseLearner < Learner
                 pen_last = 1;
             end
             a = 1.0; % Smoothing/scale for hyperbolic tangent
-            obs_count = size(X,1);
             obs_dim = size(X,2);
             lam = lam / obs_dim;
             % Decompose Y into sign and magnitude components
@@ -261,7 +216,7 @@ classdef SparseLearner < Learner
             else
                 loss_reg = sum(w(1:end-1).^2);
             end
-            loss_class = sum(Ym .* (1 - tanh((Ys .* a) .* F))) / obs_count;
+            loss_class = sum(Ym .* (1 - tanh((Ys .* a) .* F)));
             L = loss_class + ((lam/2) * loss_reg);
             if (nargout > 1)
                 % Compute objective function gradients

@@ -9,16 +9,12 @@ classdef MultiClassLearner < Learner
     %                   the dot products: <f(x_i), c(x_i)> - <f(x_i), ~c(x_i)>,
     %                   where c(x_i) is the codeword for x_i's class, and
     %                   ~c(x_i) is a codeword for any other class.
-    %   opts.do_opt: This indicates whether to use fast training optimization.
-    %                This should only be set to 1 if all training rounds will
-    %                use the same training set of observations/classes.
     %   opts.l_const: constructor handle for base learner
     %   opts.l_count: This determines the dimensionality of the space into which
     %                 observations will be projected for classification (and
     %                 hence the number of boosted learners to train).
     %   opts.l_opts: options struct to pass to opts.l_const
-    %   opts.alpha: This is currently ignored. It will determine the smoothing
-    %               factor for the softmax used in multiclass loss.
+    %   opts.lam_l1: l1 regularization weight for class codes
     %
     % Note: opts.l_opts.nu is overridden by opts.nu.
     %
@@ -35,14 +31,8 @@ classdef MultiClassLearner < Learner
         % c_codes containing the codeword currently assigned to the i'th class
         % label in c_labels
         c_codes
-        % alpha is a scaling factor for sum-of-softmax
-        alpha
-        % Xt is an optional fixed training set, used if opt_train==1
-        Xt
-        % Ft is the current output of this learner for each row in Xt
-        Ft
-        % opt_train indicates if to use fast training optimization
-        opt_train
+        % lam_l1 is a regularization weight on code words
+        lam_l1
     end % END PROPERTIES
     
     methods
@@ -64,10 +54,10 @@ classdef MultiClassLearner < Learner
             else
                 self.loss_func = opts.loss_func;
             end 
-            if ~isfield(opts,'alpha')
-                self.alpha = 1.0;
+            if ~isfield(opts,'lam_l1')
+                self.lam_l1 = 0.0;
             else
-                self.alpha = opts.alpha;
+                self.lam_l1 = opts.lam_l1;
             end
             if ~isfield(opts,'l_const')
                 opts.l_const = @StumpLearner;
@@ -79,15 +69,6 @@ classdef MultiClassLearner < Learner
             end
             if ~isfield(opts,'l_opts')
                 opts.l_opts = struct();
-            end
-            if ~isfield(opts,'do_opt')
-                self.opt_train = 0;
-                self.Xt = [];
-                self.Ft = [];
-            else
-                self.opt_train = opts.do_opt;
-                self.Xt = X;
-                self.Ft = zeros(size(X,1),self.l_count);
             end
             % Find the classes present in Y and assign them codewords
             Cy = sort(unique(Y),'ascend');
@@ -130,6 +111,7 @@ classdef MultiClassLearner < Learner
                     self.loss_wrapper(fc, Fa, yc, self.loss_func, l_num, ic);
                 L = lrnr.extend(X, Y, keep_it);
                 Fa(:,l_num) = lrnr.evaluate(X);
+                lrnr.loss_func = [];
             end
             return
         end
@@ -252,7 +234,7 @@ classdef MultiClassLearner < Learner
                     [lc dlc] = loss_func(Fd(:,c_num), uno, idx, 1);
                     dLc(:,c_num) = dlc(:);
                 end
-                dLc = dLc .* -(c_mask - 1);
+                dLc = dLc .* (1 - c_mask);
                 dLc_c = -sum(dLc,2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
                 % dLdF is the gradient of the loss with respect to the outputs
@@ -287,6 +269,7 @@ classdef MultiClassLearner < Learner
             codes = reshape(codes,c_count,obs_dim);
             codes_scales = sqrt(sum(codes.^2,2) + 1e-8);
             codes_normed = bsxfun(@rdivide, codes, codes_scales);
+            codes_nabs = sqrt(codes_normed.^2 + 1e-6);
             % Get the index into self.c_labels and self.c_codes for each class
             % membership, and put these in a binary masking matrix
             c_idx = zeros(obs_count,1);
@@ -311,7 +294,8 @@ classdef MultiClassLearner < Learner
             % Zero-out the entries in Lc and dLc corresponding to the class to
             % which each observation belongs.
             Lc = -(Lc .* (c_mask - 1));
-            L = (sum(sum(Lc)) / obs_count);
+            L = (sum(sum(Lc)) / obs_count) + ...
+                (self.lam_l1 / numel(codes)) * sum(sum(codes_nabs));
             % Compute gradients if they are requested
             if (nargout > 1)
                 % dLc is gradient of loss with respect to the differences
@@ -324,12 +308,13 @@ classdef MultiClassLearner < Learner
                     [lc dlc] = loss_func(Fd(:,c_num), uno, idx, 1);
                     dLc(:,c_num) = dlc(:);
                 end
-                dLc = dLc .* -(c_mask - 1);
+                dLc = dLc .* (1 - c_mask);
                 dLc_c = -sum(dLc,2);
                 dLc(sub2ind(size(dLc),1:obs_count,c_idx')) = dLc_c(:);
                 % dLdC is the gradient of the loss with respect to the elements
                 % of the codewords for each class
-                dLdC = -(dLc' * F) ./ obs_count;
+                dLdC = -((dLc' * F) ./ obs_count) + ...
+                    (self.lam_l1 / numel(codes)) * (codes_normed ./ codes_nabs);
                 dLdC = bsxfun(@rdivide, dLdC, codes_scales) -...
                        bsxfun(@times, codes_normed, sum(dLdC.*codes, 2) ./...
                        (codes_scales.^2));
@@ -338,20 +323,23 @@ classdef MultiClassLearner < Learner
             return
         end
         
-        function [ codes ]  = set_codewords(self, X, Y)
+        function [ codes ]  = set_codewords(self, X, Y, rounds)
             % Reset the current class codewords based on the observations in X
             % and Y. For now, set them to the means of each class, rescaled to
             % unit norm.
             %
+            if ~exist('rounds','var')
+                rounds = 10;
+            end
             % Setup options for minFunc
             options = struct();
             options.Display = 'off';
             options.Method = 'lbfgs';
             options.Corr = 5;
-            options.LS = 1;
+            options.LS = 0;
             options.LS_init = 3;
-            options.MaxIter = 20;
-            options.MaxFunEvals = 100;
+            options.MaxIter = rounds;
+            options.MaxFunEvals = 75;
             options.TolX = 1e-8;
             % Set the loss function for code optimization
             F = self.evaluate(X);
@@ -365,20 +353,6 @@ classdef MultiClassLearner < Learner
         
     end % END METHODS
     methods (Static = true)
-        
-        function [ step ] = find_step(F, Fs, step_func)
-            % Use Matlab unconstrained optimization to find a step length that
-            % minimizes: step_func(F + Fs.*step)
-            options = optimset('MaxFunEvals',30,'TolX',1e-3,'TolFun',1e-3,...
-                'Display','off');
-            [L dL] = step_func(F);
-            if (sum(Fs.*dL) > 0)
-                step = fminbnd(@( s ) step_func(F + Fs.*s), -1, 0, options);
-            else
-                step = fminbnd(@( s ) step_func(F + Fs.*s), 0, 1, options);
-            end
-            return
-        end
         
         function [ codes ] = init_codes(c_labels, l_count)
             % Generate an initial set of codewords for the classes whose labels
@@ -396,4 +370,3 @@ classdef MultiClassLearner < Learner
     end % END METHODS (STATIC)
     
 end % END CLASSDEF
-
