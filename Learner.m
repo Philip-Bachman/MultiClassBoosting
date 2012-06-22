@@ -36,7 +36,15 @@ classdef Learner < handle
             % Use Matlab unconstrained optimization to find a step length that
             % minimizes: loss_func(F + (Fs .* step))
             step_opts = optimset('MaxFunEvals',50,'TolX',1e-3,'TolFun',...
-                1e-3,'Display','off');
+                1e-3,'Display','off','GradObj','on');
+            %function [ Ls dLdS ] = step_loss_grad(s, F, Fs, loss_func)
+            %    % Wrapper function
+            %    [Ls dLdS] = loss_func(F + (Fs .* s));
+            %    dLdS = sum(dLdS .* Fs);
+            %    return
+            %end
+            %objFun = @( s ) step_loss_grad(s, F, Fs, step_func);
+            %step = fminunc(objFun, 0, step_opts);
             [L dL] = step_func(F);
             Fd = Fs;
             if (numel(dL) ~= numel(Fs))
@@ -48,9 +56,9 @@ classdef Learner < handle
                 Fd = ones(size(dL));
             end
             if (sum(Fd.*dL) > 0)
-                step = fminbnd(@( s ) step_func(F + (Fs.*s)), -10, 0, step_opts);
+                step = fminbnd(@( s ) step_func(F + (Fs.*s)), -25, 0, step_opts);
             else
-                step = fminbnd(@( s ) step_func(F + (Fs.*s)), 0, 10, step_opts);
+                step = fminbnd(@( s ) step_func(F + (Fs.*s)), 0, 25, step_opts);
             end
             return
         end

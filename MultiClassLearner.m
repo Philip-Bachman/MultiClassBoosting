@@ -141,6 +141,25 @@ classdef MultiClassLearner < Learner
             return
         end
         
+        function [ M ] = margins(self, X, Y)
+            % Compute margins for the observations in X, given the classes in Y
+            %
+            obs_count = size(X,1);
+            c_count = numel(self.c_labels);
+            F = self.evaluate(X);
+            % Get the index into self.c_labels and self.c_codes for each class
+            % membership, and put these in a binary masking matrix
+            c_idx = zeros(obs_count,1);
+            c_mask = zeros(obs_count,c_count);
+            for c_num=1:c_count,
+                c_mask(Y == self.c_labels(c_num), c_num) = 1;
+                c_idx(Y == self.c_labels(c_num)) = c_num;
+            end
+            H = F * self.c_codes';
+            M = sum(H .* c_mask,2) - max(H .* (1 - c_mask),[],2);
+            return
+        end
+        
         function [ L dLdFc ] = loss_wrapper(self, Fc, Fa, Y, lfun, c_num, idx)
             % Wrapper for evaluating multiclass loss and gradient, with respect
             % to outputs of a single learner.

@@ -7,12 +7,12 @@ Y_train = iris_y;
 clear('iris_x','iris_y');
 
 mc_opts = struct();
-mc_opts.nu = 0.05;
-mc_opts.loss_func = @loss_huberhinge;
+mc_opts.nu = 1.0;
+mc_opts.loss_func = @loss_bindev;
 mc_opts.l_count = 3;
-mc_opts.l_const = @StumpLearner;
+mc_opts.l_const = @RBFLearner;
 mc_opts.lam_nuc = 0e-3;
-mc_opts.lam_dif = 5e-2;
+mc_opts.lam_dif = 1.0;
 mc_opts.lam_l1 = 0.0;
 
 % fig = figure();
@@ -22,7 +22,7 @@ mc_opts.lam_l1 = 0.0;
 %     colors(i,Y_train(i)) = 1;
 % end
 
-cv_rounds = 30;
+cv_rounds = 50;
 cv_test_frac = 0.2;
 cv_accs = zeros(cv_rounds,1);
 for cv_round=1:cv_rounds,
@@ -33,14 +33,32 @@ for cv_round=1:cv_rounds,
     Xte = X_train(te_idx,:);
     Yte = Y_train(te_idx);
     mc_learner = MultiClassLearner(X_train,Y_train,mc_opts);
-    for r=1:20,
+    for r=1:1,
         fprintf('==================================================\n');
         fprintf('META ROUND %d...\n',r);
         for i=1:5,
-            tidx = randsample(1:size(Xtr,1), round(size(Xtr,1) * 0.66));
-            Xn = Xtr(tidx,:);
-            Xn = Xn + bsxfun(@times, randn(size(Xn)), 0.1 * std(X_train));
-            L = mc_learner.extend(Xn,Ytr(tidx));
+            for j=1:numel(mc_learner.l_objs),
+                lrnr = mc_learner.l_objs{j};
+                centers = [];
+                sigmas = [];
+                for s=1:3,
+                    idx = randsample(size(Xtr,1),66);
+                    centers = [centers; Xtr(idx,:)];
+                    sigmas = [sigmas; ((mean(std(Xtr)) / s) * ones(66,1))];
+                end
+                lrnr.set_rbf_centers(centers,sigmas);
+                lrnr.rbf_type = 2;
+                lrnr.nz_count = 10;
+                lrnr.lam_l2 = 1e-1;
+            end
+            Xn = [];
+            Yn = [];
+            for j=1:5,
+                Xn = [Xn; ...
+                    Xtr + bsxfun(@times, randn(size(Xtr)), 0.1 * std(Xtr))];
+                Yn = [Yn; Ytr];
+            end
+            L = mc_learner.extend(Xn,Yn);
             [F H C] = mc_learner.evaluate(Xtr);
             a_train = sum(Ytr==C) / numel(Ytr);
             [F H C] = mc_learner.evaluate(Xte);
@@ -74,21 +92,28 @@ for cv_round=1:cv_rounds,
 %         set(gca,'XTick',[],'YTick',[]);
 %         box on;
 %         drawnow;
-%         if (r == 5 || r == 15 || r == 40)
-%             f_name = sprintf('iris_dif_off_r%d',r);
-%             f_eps = sprintf('%s_eps',f_name);
-%             f_fig = sprintf('%s_fig',f_name);
-%             print('-f1', '-r600', '-depsc', f_name);
-%             hgsave(fig, f_fig);
-%             pause(2);
-%         end
     end
-    save('results_iris.mat');
 end
 
 %%%%%%%%%%%%%%%%%%%
 % SPARE SCRIPTAGE %
 %%%%%%%%%%%%%%%%%%%
+
+% cv_rounds = 50;
+% cv_test_frac = 0.33;
+% cv_accs = zeros(cv_rounds,1);
+% for r=1:cv_rounds,
+%     te_idx = randsample(size(X_train,1),round(size(X_train,1) * cv_test_frac));
+%     tr_idx = setdiff(1:size(X_train,1),te_idx);
+%     Xtr = X_train(tr_idx,:);
+%     Ytr = Y_train(tr_idx);
+%     Xte = X_train(te_idx,:);
+%     Yte = Y_train(te_idx);
+%     model = svmtrain(Ytr,Xtr,'-c 1 -s 0 -t 2');
+%     [label acc preds] = svmpredict(Yte, Xte, model);
+%     cv_accs(r) = acc(1);
+% end
+
 % 
 % for r=1:5,
 %     fprintf('==================================================\n');

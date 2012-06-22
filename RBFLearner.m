@@ -14,7 +14,7 @@ classdef RBFLearner < Learner
     %   opts.nz_count: Number of non-zero coefficients to produce in each RBF
     %                  classifier and/or regressor.
     %   opts.rbf_type: 1 for classifier and 2 for regressor
-    %   opts.rbf_sigma: rbf_sigma dtermines the bandwidth of RBFs
+    %   opts.rbf_gamma: rbf_gamma dtermines the bandwidth of RBFs
     %
     
     properties
@@ -26,7 +26,7 @@ classdef RBFLearner < Learner
         % IF rbf_func = rbf_funcs{i}, rbf_func contains:
         %   rbf_func.centers: matrix containing RBF centers
         %   rbf_func.coeffs: array of coefficients for the centers
-        %   rbf_func.sigma: width of RBFs
+        %   rbf_func.gammas: width of the RBF for each center
         %   rbf_func.weights: the one (two) weight(s) for regress/class func
         %   rbf_func.type: 1/2, for classifier/regressor, respectively
         %
@@ -36,8 +36,8 @@ classdef RBFLearner < Learner
         % rbf_type determines the type of weak learner to produce in each
         % boosting round.
         rbf_type
-        % rbf_sigma determines bandwidth of the RBFs used in a boosting round
-        rbf_sigma
+        % rbf_gamma determines bandwidth of the RBFs used in a boosting round
+        rbf_gammas
         % rbf_centers contains the potential RBF centers for a boostong round
         rbf_centers
         % lam_l2 is a regularization weight used during "post-processing"
@@ -72,10 +72,11 @@ classdef RBFLearner < Learner
                 self.rbf_type = opts.rbf_type;
                 self.check_rbf_type();
             end
-            if ~isfield(opts,'rbf_sigma')
-                self.rbf_sigma = 0.1 * mean(std(X));
+            if ~isfield(opts,'rbf_gamma')
+                % Default to gamma = 1/num_feat (same as for libsvm)
+                self.rbf_gammas = 1 / size(X,2);
             else
-                self.rbf_sigma = opts.rbf_sigma;
+                self.rbf_gammas = opts.rbf_gammas;
             end
             self.rbf_centers = [];
             self.rbf_funcs = {};
@@ -88,7 +89,7 @@ classdef RBFLearner < Learner
             rbf_func = struct();
             rbf_func.centers = X(1,:);
             rbf_func.coeffs = 1;
-            rbf_func.sigma = 1;
+            rbf_func.gammas = 1;
             rbf_func.type = 1;
             rbf_func.weights = [s s];
             self.rbf_funcs{1} = rbf_func;
@@ -110,8 +111,8 @@ classdef RBFLearner < Learner
             obs_count = size(X,1);
             [L dL] = self.loss_func(F, Y, 1:obs_count);
             % Compute an RBF representation of X using current RBF centers
-            [X_rbf centers sigma] = ...
-                self.compute_rbfs(X, self.rbf_centers, self.rbf_sigma);
+            [X_rbf centers gammas] = ...
+                self.compute_rbfs(X, self.rbf_centers, self.rbf_gammas);
             % Do a sparsifying regression to find a good set of coefficients
             w = self.do_reg(X_rbf, dL, self.nz_count);
             % Compute the output of the learned RBF classifier/regressor for
@@ -129,9 +130,15 @@ classdef RBFLearner < Learner
             end
             % Build an rbf_func structure around the learned RBF
             rbf_func = struct();
-            rbf_func.centers = centers(nz_idx,:);
-            rbf_func.coeffs = w;
-            rbf_func.sigma = sigma;
+            if (numel(nz_idx) > 0)
+                rbf_func.centers = centers(nz_idx,:);
+                rbf_func.gammas = gammas(nz_idx);
+                rbf_func.coeffs = w;
+            else
+                rbf_func.centers = centers(1,:);
+                rbf_func.gammas = 1;
+                rbf_func.coeffs = 0;
+            end
             rbf_func.type = self.rbf_type;
             % Set the rbf_func weights, dependent on rbf_type
             if (self.rbf_type == 1)
@@ -141,12 +148,12 @@ classdef RBFLearner < Learner
                 w_l = self.find_step(F, Fs, step_func);
                 step_func = @( f ) self.loss_func(f, Y, find(F_rbf > 0));
                 w_r = self.find_step(F, Fs, step_func);
-                rbf_func.weights = [w_l w_r];
+                rbf_func.weights = [w_l w_r] .* self.nu;
             else
                 % Find a good step size for a regression direction
-                step_func = @( f ) self.loss_func(f, Y, find(F_rbf));
+                step_func = @( f ) self.loss_func(f, Y, 1:numel(Y));
                 w = self.find_step(F, F_rbf, step_func);
-                rbf_func.weights = w;
+                rbf_func.weights = w * self.nu;
             end
             % Append the learned RBF classifier/regressor to self.rbf_funcs
             self.rbf_funcs{end+1} = rbf_func;
@@ -190,7 +197,7 @@ classdef RBFLearner < Learner
             % Evaluate the RBF function described by the struct rbf_func for
             % each observation in X
             %
-            X_rbf = self.compute_rbfs(X, rbf_func.centers, rbf_func.sigma);
+            X_rbf = self.compute_rbfs(X, rbf_func.centers, rbf_func.gammas);
             if (numel(rbf_func.coeffs) > size(rbf_func.centers,1))
                 % Compute when there is a bias
                 F = (X_rbf * rbf_func.coeffs(1:end-1)) + rbf_func.coeffs(end);
@@ -210,32 +217,45 @@ classdef RBFLearner < Learner
             return
         end
 
-        function [X_rbf centers sigma] = compute_rbfs(self, X, centers, sigma)
-            % Use the current self.rbf_centers and self.rbf_sigma to compute
+        function [X_rbf centers gammas] = compute_rbfs(self, X, centers, gammas)
+            % Use the current self.rbf_centers and self.rbf_gammas to compute
             % the RBF representation of the observations in X
             %
             if ~exist('centers','var')
                 centers = self.rbf_centers;
             end
-            if ~exist('sigma','var')
-                sigma = self.rbf_sigma;
+            if ~exist('gammas','var')
+                gammas = self.rbf_gammas;
+            end
+            if (numel(gammas) < size(centers,1))
+                gammas = repmat(gammas(1),size(centers,1),1);
             end
             rbf_count = size(centers,1);
             X_rbf = zeros(size(X,1),rbf_count);
             for i=1:rbf_count,
-                rbf = exp(-sum(bsxfun(@minus,X,centers(i,:)).^2,2) ./ sigma);
-                X_rbf(:,i) = rbf;
+                if (gammas(i) < 0)
+                    X_rbf(:,i) = log(1 + exp(X * centers(i,:)'));
+                else
+                    X_rbf(:,i) = exp(...
+                        -sum(bsxfun(@minus,X,centers(i,:)).^2,2) .* gammas(i));
+                end
             end
             return
         end
 
-        function [res] = set_rbf_centers(self, centers, center_count)
+        function [res] = set_rbf_centers(self, centers, gammas, center_count)
             % set self.rbf_centers
+            if (numel(gammas) < size(centers,1))
+                gammas = repmat(gammas(1),size(centers,1),1);
+            end
             if exist('center_count','var')
                 % subsample the set of proposed centers, if so desired
-                centers = centers(randsample(size(centers,1),center_count),:);
+                idx = randsample(size(centers,1),center_count);
+                centers = centers(idx,:);
+                gammas = gammas(idx);
             end
             self.rbf_centers = centers;
+            self.rbf_gammas = gammas;
             res = 0;
             return
         end
@@ -249,6 +269,10 @@ classdef RBFLearner < Learner
             end
             return
         end
+        
+        %%%%%%%%%%%%%%%%%%%%
+        % REGRESSION STUFF %
+        %%%%%%%%%%%%%%%%%%%%
         
         function [w] = do_reg(self, X, Y, nz_count)
             % Compute a sparsifying elastic-net logistic regression, followed by
@@ -268,7 +292,7 @@ classdef RBFLearner < Learner
             glm_opts.pmax = 5 * glm_opts.dfmax;
             glm_opts.alpha = 0.9;
             glm_opts.nlambda = 500;
-            glm_opts.thresh = 1e-3;
+            glm_opts.thresh = 1e-4;
             if (self.rbf_type == 1)
                 % Decompose the target gradients into "classes" and "weights"
                 % for the logistic regression
@@ -301,28 +325,33 @@ classdef RBFLearner < Learner
             %warning off all;
             mf_opts = struct();
             mf_opts.Display = 'off';
-            mf_opts.Method = 'lbfgs';
+            mf_opts.Method = 'cg';
             mf_opts.Corr = 5;
             mf_opts.LS = 3;
-            mf_opts.LS_init = 3;
-            mf_opts.MaxIter = 200;
-            mf_opts.MaxFunEvals = 500;
-            mf_opts.TolX = 1e-8;
+            mf_opts.LS_init = 1;
+            mf_opts.MaxIter = 50;
+            mf_opts.MaxFunEvals = 250;
+            mf_opts.TolX = 1e-6;
+            mf_opts.TolFun = 1e-6;
             % Do a hyper tangent regression update of the coefficients for
             % non-linearity
             nz_idx = find(best_coeffs);
-            Xnz = [X(:,nz_idx) ones(size(X,1),1)];
-            wi = [best_coeffs(nz_idx); best_bias];
-            if (self.rbf_type == 1)
-                funObj = @( b ) self.l2_hyptan(b, Xnz, Y, self.lam_l2, 0);
+            if (numel(nz_idx) > 0)
+                Xnz = [X(:,nz_idx) ones(size(X,1),1)];
+                wi = [best_coeffs(nz_idx); best_bias];
+                if (self.rbf_type == 1)
+                    funObj = @( b ) self.l2_hyptan(b, Xnz, Y, self.lam_l2, 0);
+                else
+                    funObj = @( b ) self.l2_lsq(b, Xnz, Y, self.lam_l2, 0);
+                end
+                wi = minFunc(funObj, wi, mf_opts);
+                % Reload best coefficients and bias using tweaked values
+                w = zeros(numel(best_coeffs)+1,1);
+                w(nz_idx) = wi(1:numel(nz_idx));
+                w(end) = wi(end);
             else
-                funObj = @( b ) self.l2_lsq(b, Xnz, Y, self.lam_l2, 0);
+                w = zeros(numel(best_coeffs)+1,1);
             end
-            wi = minFunc(funObj, wi, mf_opts);
-            % Reload best coefficients and bias using tweaked values
-            w = zeros(numel(best_coeffs)+1,1);
-            w(nz_idx) = wi(1:numel(nz_idx));
-            w(end) = wi(end);
             return
         end
         
@@ -345,7 +374,6 @@ classdef RBFLearner < Learner
             if ~exist('pen_last','var')
                 pen_last = 1;
             end
-            obs_count = size(X,1);
             % Smoothing/scale for hyperbolic tangent
             a = 1.0;
             % Decompose Y into sign and magnitude components
@@ -358,7 +386,7 @@ classdef RBFLearner < Learner
             else
                 loss_reg = sum(w(1:end-1).^2);
             end
-            loss_class = sum(Ym .* (1 - tanh((Ys .* a) .* F))) / obs_count;
+            loss_class = sum(Ym .* (1 - tanh((Ys .* a) .* F)));
             L = loss_class + ((lam/2) * loss_reg);
             if (nargout > 1)
                 % Compute objective function gradients
@@ -370,7 +398,7 @@ classdef RBFLearner < Learner
                 dL = (Ym .* ((tanh((Ys .* a) .* F).^2 - 1) .* (Ys .* a)));
                 % Backpropagate through input observations
                 dLdW = sum(bsxfun(@times, X .* a, dL));
-                dLdW = (dLdW' ./ obs_count) + (lam * dR);
+                dLdW = dLdW' + (lam * dR);
             end
             return
         end
@@ -392,26 +420,25 @@ classdef RBFLearner < Learner
             if ~exist('pen_last','var')
                 pen_last = 1;
             end
-            obs_count = size(X,1);
             F = X * w;
             R = F - Y;
-            % Compute least-squares part of loss
-            L = sum(R.^2) / obs_count;
-            % Add regularization loss
-            if (pen_last == 1)
-                L = L + sum(w.^2);
-            else
-                L = L + sum(w(1:end-1).^2);
+            % Compute least-squares and regularization loss
+            L_res = sum(R.^2);
+            L_reg = sum(w.^2);
+            if (pen_last == 0)
+                L_reg = L_reg - w(end).^2;
             end
+            L = L_res + L_reg;
             if (nargout > 1)
                 % Loss gradient with respect to residual
                 dLdR = 2 * R;
                 % Loss gradient with respect to coefficients
-                dLdW = sum(bsxfun(@times,X,dLdR)) / obs_count;
+                dLdW = sum(bsxfun(@times,X,dLdR));
                 dLdW = dLdW' + (2 * lam * w);
                 if (pen_last == 0)
                    dLdW(end) = dLdW(end) - (2 * lam * w(end));
-                end 
+                end
+                dLdW = dLdW ./ norm(dLdW);
             end
             return
         end
