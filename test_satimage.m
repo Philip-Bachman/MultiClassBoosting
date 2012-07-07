@@ -15,11 +15,11 @@ X_test = X_all(train_size+1:end,:);
 mc_opts = struct();
 mc_opts.nu = 1.0;
 mc_opts.loss_func = @loss_hingesq;
-mc_opts.l_count = 3;
+mc_opts.l_count = 8;
 mc_opts.l_const = @RBFLearner;
 mc_opts.lam_l1 = 0e-2;
-mc_opts.lam_nuc = 0e-1;
-mc_opts.lam_dif = 1e-2;
+mc_opts.lam_nuc = 1.0;
+mc_opts.lam_dif = 0e-2;
 
 test_count = 1;
 test_accs = zeros(test_count,1);
@@ -40,20 +40,21 @@ for t_num=1:test_count,
                 centers = [];
                 gammas = [];
                 for g=5:5:30,
-                    idx = randsample(Ms_idx(1:1000),150);
+                    idx = randsample(Ms_idx(1:1000),100);
                     gamma = g * (1 / size(X_train,2));
                     centers = [centers; X_train(idx,:)];
-                    gammas = [gammas; gamma * ones(150,1)];
+                    gammas = [gammas; gamma * ones(100,1)];
                 end
                 %gammas = gammas .* sign(randn(size(gammas)));
                 lrnr.set_rbf_centers(centers,gammas);
                 lrnr.rbf_type = 2;
-                lrnr.nz_count = 50;
+                lrnr.nz_count = 20;
                 lrnr.lam_l2 = 1e-2;
             end
             L = mc_learner.extend(X_train,Y_train);
-            [F H C] = mc_learner.evaluate(X_train);
-            a_train = sum(Y_train==C) / numel(Y_train);
+            %[F H C] = mc_learner.evaluate(X_train);
+            %a_train = sum(Y_train==C) / numel(Y_train);
+            a_train = 0.0;
             [F H C] = mc_learner.evaluate(X_test);
             a_test = sum(Y_test==C) / numel(Y_test);
             test_accs(t_num) = a_test;

@@ -97,7 +97,7 @@ classdef RBFLearner < Learner
             return
         end
         
-        function [ L ] = extend(self, X, Y, keep_it)
+        function [ L F ] = extend(self, X, Y, keep_it)
             % Extend the current set of regressions, based on the observations
             % in X, using the classes in Y, and keeping changes if keep_it==1.
             self.check_rbf_type();
